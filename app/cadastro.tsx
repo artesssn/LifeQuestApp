@@ -1,36 +1,27 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from 'react-native';
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LifeQuestAuthShell } from '@/components/lifequest-auth-shell';
 import { LifeQuestBackground } from '@/components/lifequest-background';
 import { environmentLabels, lifeQuestTheme, roleLabels } from '@/constants/lifequest-theme';
+import { lifeQuestTypography } from '@/constants/lifequest-typography';
 import { useLifeQuestDemo } from '@/contexts/lifequest-demo-context';
 
-const COMPANIONS = [
+const companions = [
   {
     id: 'fox',
-    emoji: '🦊',
     name: 'Kael',
-    title: 'Raposa estratégica',
-    icon: 'auto-awesome',
-    accent: '#F08A31',
+    title: 'Acompanha metas e progresso',
+    icon: 'pets',
   },
   {
     id: 'owl',
-    emoji: '🦉',
     name: 'Lyra',
-    title: 'Coruja observadora',
-    icon: 'nightlight-round',
-    accent: '#6E7DFF',
+    title: 'Observa foco e consistencia',
+    icon: 'visibility',
   },
 ] as const;
 
@@ -60,59 +51,48 @@ export default function CadastroScreen() {
     <LifeQuestBackground>
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.kicker}>Cadastro inicial</Text>
-          <Text style={styles.title} testID="register-title">Agora vamos parametrizar sua conta</Text>
-          <Text style={styles.subtitle}>
-            Ambiente {environmentLabels[draftJourney.environment]} • classe {roleLabels[draftJourney.role]}
-          </Text>
+          <LifeQuestAuthShell
+            kicker="Cadastro"
+            title="Configure a conta da demonstracao"
+            subtitle={`Ambiente ${environmentLabels[draftJourney.environment]} • Perfil ${roleLabels[draftJourney.role]}`}
+            sideTitle="O que esta sendo configurado"
+            sideBody="Esse cadastro salva nome, senha, contexto e avatar de apoio para que o usuario volte ao mesmo ponto da demonstracao depois.">
+            <View style={styles.avatarCard}>
+              <Text style={styles.blockTitle}>Escolha um perfil de apoio</Text>
+              <Text style={styles.blockBody}>
+                Esse item reforca a proposta visual do app sem tirar o foco da parte profissional.
+              </Text>
 
-          <View style={styles.avatarCard}>
-            <Text style={styles.avatarTitle}>Escolha um companheiro</Text>
-            <Text style={styles.avatarSubtitle}>
-              Seu companheiro representa a jornada do jogador dentro do LifeQuest.
-            </Text>
-            <View style={styles.avatarGrid}>
-              {COMPANIONS.map((companion) => {
-                const selected = companion.id === companionId;
+              <View style={styles.avatarGrid}>
+                {companions.map((companion) => {
+                  const selected = companion.id === companionId;
 
-                return (
-                  <Pressable
-                    key={companion.id}
-                    onPress={() => setCompanionId(companion.id)}
-                    testID={`companion-${companion.id}`}
-                    style={({ pressed }) => [
-                      styles.avatarOption,
-                      selected && styles.avatarOptionSelected,
-                      pressed && styles.avatarOptionPressed,
-                    ]}>
-                    <View
-                      style={[
-                        styles.avatarIllustration,
-                        { backgroundColor: `${companion.accent}22` },
-                      ]}>
-                      <Text style={styles.avatarEmoji}>{companion.emoji}</Text>
-                      <View
-                        style={[
-                          styles.avatarIconBadge,
-                          { backgroundColor: companion.accent },
-                        ]}>
+                  return (
+                    <Pressable
+                      key={companion.id}
+                      onPress={() => setCompanionId(companion.id)}
+                      style={({ pressed }) => [
+                        styles.avatarOption,
+                        selected && styles.avatarOptionSelected,
+                        pressed && styles.optionPressed,
+                      ]}
+                      testID={`companion-${companion.id}`}>
+                      <View style={[styles.avatarIconWrap, selected && styles.avatarIconWrapSelected]}>
                         <MaterialIcons
                           color={lifeQuestTheme.colors.text}
                           name={companion.icon}
-                          size={16}
+                          size={24}
                         />
                       </View>
-                    </View>
-                    <Text style={styles.avatarName}>{companion.name}</Text>
-                    <Text style={styles.avatarRole}>{companion.title}</Text>
-                  </Pressable>
-                );
-              })}
+                      <Text style={styles.avatarName}>{companion.name}</Text>
+                      <Text style={styles.avatarRole}>{companion.title}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
-          </View>
 
-          <View style={styles.formCard}>
-            <Text style={styles.inputLabel}>Seu nome</Text>
+            <Text style={styles.label}>Nome</Text>
             <TextInput
               onChangeText={setName}
               placeholder="Digite seu nome para a demo"
@@ -122,7 +102,7 @@ export default function CadastroScreen() {
               value={name}
             />
 
-            <Text style={styles.inputLabel}>Senha</Text>
+            <Text style={styles.label}>Senha</Text>
             <TextInput
               onChangeText={setPassword}
               placeholder="Crie uma senha"
@@ -133,7 +113,7 @@ export default function CadastroScreen() {
               value={password}
             />
 
-            <Text style={styles.inputLabel}>Limitação física ou observação</Text>
+            <Text style={styles.label}>Observacao adicional</Text>
             <TextInput
               multiline
               numberOfLines={3}
@@ -147,30 +127,29 @@ export default function CadastroScreen() {
             />
 
             {authError ? <Text style={styles.errorText}>{authError}</Text> : null}
-          </View>
 
-          <Pressable
-            disabled={disabled}
-            onPress={() => {
-              const ok = registerProfile({
-                name: name.trim(),
-                limitation: limitation.trim(),
-                companionId,
-                password,
-              });
-              if (ok) {
-                router.replace('/(tabs)');
-              }
-            }}
-            testID="register-submit-button"
-            style={({ pressed }) => [
-              styles.submitButton,
-              disabled && styles.submitButtonDisabled,
-              pressed && !disabled && styles.submitButtonPressed,
-            ]}>
-            <MaterialIcons color={lifeQuestTheme.colors.text} name="check-circle" size={22} />
-            <Text style={styles.submitButtonText}>Entrar na demonstração</Text>
-          </Pressable>
+            <Pressable
+              disabled={disabled}
+              onPress={() => {
+                const ok = registerProfile({
+                  name: name.trim(),
+                  limitation: limitation.trim(),
+                  companionId,
+                  password,
+                });
+                if (ok) {
+                  router.replace('/(tabs)');
+                }
+              }}
+              style={({ pressed }) => [
+                styles.submitButton,
+                disabled && styles.submitButtonDisabled,
+                pressed && !disabled && styles.optionPressed,
+              ]}
+              testID="register-submit-button">
+              <Text style={styles.submitButtonText}>Finalizar cadastro</Text>
+            </Pressable>
+          </LifeQuestAuthShell>
         </ScrollView>
       </SafeAreaView>
     </LifeQuestBackground>
@@ -178,161 +157,110 @@ export default function CadastroScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+  container: { flex: 1 },
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingTop: 32,
-    paddingBottom: 36,
-  },
-  kicker: {
-    color: lifeQuestTheme.colors.accent,
-    fontSize: 14,
-    fontWeight: '700',
-    marginBottom: 10,
-  },
-  title: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 34,
-    fontWeight: '800',
-    lineHeight: 42,
-    marginBottom: 8,
-  },
-  subtitle: {
-    color: lifeQuestTheme.colors.muted,
-    fontSize: 15,
-    lineHeight: 23,
-    marginBottom: 28,
+    paddingHorizontal: 24,
+    paddingVertical: 28,
   },
   avatarCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderColor: lifeQuestTheme.colors.cardBorder,
-    borderRadius: 24,
+    borderRadius: lifeQuestTheme.radius.md,
     borderWidth: 1,
     marginBottom: 18,
-    padding: 20,
+    padding: 16,
   },
-  avatarTitle: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 18,
-    fontWeight: '700',
+  blockTitle: {
+    ...lifeQuestTypography.cardTitle,
     marginBottom: 6,
   },
-  avatarSubtitle: {
-    color: lifeQuestTheme.colors.muted,
-    fontSize: 14,
-    lineHeight: 21,
-    marginBottom: 16,
+  blockBody: {
+    ...lifeQuestTypography.body,
+    marginBottom: 14,
   },
   avatarGrid: {
     flexDirection: 'row',
-    gap: 14,
+    gap: 12,
   },
   avatarOption: {
-    alignItems: 'center',
-    backgroundColor: lifeQuestTheme.colors.card,
+    backgroundColor: lifeQuestTheme.colors.cardElevated,
     borderColor: 'transparent',
-    borderRadius: 22,
+    borderRadius: lifeQuestTheme.radius.md,
     borderWidth: 1,
     flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 18,
+    padding: 14,
   },
   avatarOptionSelected: {
-    backgroundColor: lifeQuestTheme.colors.accentSoft,
     borderColor: lifeQuestTheme.colors.accent,
+    backgroundColor: 'rgba(92,141,255,0.15)',
   },
-  avatarOptionPressed: {
-    opacity: 0.88,
-  },
-  avatarIllustration: {
+  avatarIconWrap: {
     alignItems: 'center',
-    borderRadius: 22,
-    height: 92,
+    backgroundColor: 'rgba(255,255,255,0.06)',
+    borderRadius: 16,
+    height: 48,
     justifyContent: 'center',
     marginBottom: 12,
-    position: 'relative',
-    width: '100%',
+    width: 48,
   },
-  avatarEmoji: {
-    fontSize: 42,
-  },
-  avatarIconBadge: {
-    alignItems: 'center',
-    borderRadius: 999,
-    bottom: 10,
-    height: 30,
-    justifyContent: 'center',
-    position: 'absolute',
-    right: 10,
-    width: 30,
+  avatarIconWrapSelected: {
+    backgroundColor: lifeQuestTheme.colors.accentSoft,
   },
   avatarName: {
     color: lifeQuestTheme.colors.text,
+    fontFamily: lifeQuestTheme.fonts.title,
     fontSize: 16,
-    fontWeight: '700',
     marginBottom: 4,
   },
   avatarRole: {
     color: lifeQuestTheme.colors.muted,
+    fontFamily: lifeQuestTheme.fonts.body,
     fontSize: 12,
     lineHeight: 18,
-    textAlign: 'center',
   },
-  formCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
-    borderColor: lifeQuestTheme.colors.cardBorder,
-    borderRadius: 24,
-    borderWidth: 1,
-    marginBottom: 24,
-    padding: 20,
-  },
-  inputLabel: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 15,
-    fontWeight: '700',
+  label: {
+    ...lifeQuestTypography.label,
     marginBottom: 10,
   },
   input: {
-    backgroundColor: lifeQuestTheme.colors.card,
-    borderRadius: 18,
-    color: lifeQuestTheme.colors.text,
+    backgroundColor: '#DCE5F3',
+    borderRadius: lifeQuestTheme.radius.sm,
+    color: '#101521',
+    fontFamily: lifeQuestTheme.fonts.bodyStrong,
     fontSize: 15,
     marginBottom: 18,
-    minHeight: 54,
+    minHeight: 56,
     paddingHorizontal: 16,
     paddingVertical: 14,
   },
   inputMultiline: {
-    marginBottom: 0,
-    minHeight: 98,
+    minHeight: 92,
   },
   errorText: {
     color: lifeQuestTheme.colors.danger,
+    fontFamily: lifeQuestTheme.fonts.label,
     fontSize: 13,
-    marginTop: 12,
+    marginBottom: 14,
   },
   submitButton: {
     alignItems: 'center',
-    backgroundColor: '#0D6B08',
-    borderRadius: 22,
-    flexDirection: 'row',
-    gap: 10,
+    backgroundColor: lifeQuestTheme.colors.accent,
+    borderRadius: lifeQuestTheme.radius.sm,
     justifyContent: 'center',
-    minHeight: 60,
+    minHeight: 56,
+    marginTop: 4,
   },
   submitButtonDisabled: {
     opacity: 0.45,
   },
-  submitButtonPressed: {
-    opacity: 0.92,
-  },
   submitButtonText: {
     color: lifeQuestTheme.colors.text,
-    fontSize: 17,
-    fontWeight: '800',
+    fontFamily: lifeQuestTheme.fonts.heading,
+    fontSize: 16,
+  },
+  optionPressed: {
+    opacity: 0.9,
   },
 });

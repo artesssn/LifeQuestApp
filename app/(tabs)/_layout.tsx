@@ -11,11 +11,7 @@ export default function TabLayout() {
         tabBarActiveTintColor: lifeQuestTheme.colors.text,
         tabBarInactiveTintColor: lifeQuestTheme.colors.muted,
         tabBarStyle: {
-          backgroundColor: '#13161C',
-          borderTopColor: 'rgba(255,255,255,0.06)',
-          height: 76,
-          paddingBottom: 10,
-          paddingTop: 10,
+          display: 'none',
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -43,12 +39,15 @@ export default function TabLayout() {
       <Tabs.Screen
         name="arena"
         options={{
-          title: 'Arena',
+          title: 'Foco',
           tabBarIcon: ({ color, size }) => (
             <MaterialIcons color={color} name="sports-esports" size={size} />
           ),
         }}
       />
+      <Tabs.Screen name="validations" options={{ href: null }} />
+      <Tabs.Screen name="rewards" options={{ href: null }} />
+      <Tabs.Screen name="profile" options={{ href: null }} />
     </Tabs>
   );
 }

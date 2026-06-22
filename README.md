@@ -1,56 +1,74 @@
 # LifeQuest
 
-## Visao Geral
+## Visao geral
 
-O LifeQuest e um aplicativo mobile em Expo com foco em frontend, criado para apresentar um sistema de gamificacao de tarefas reais.
+O LifeQuest e um aplicativo mobile em Expo com foco em frontend. O sistema transforma tarefas reais em missoes acompanhadas por um responsavel ou gestor, usando gamificacao para incentivar disciplina, produtividade e acompanhamento de resultados.
 
-A proposta do projeto e transformar atividades do dia a dia em missoes de um universo RPG, com:
+O app foi adaptado para dois contextos:
 
-- criacao e validacao de missoes por responsaveis ou gestores
-- progresso por XP e niveis
-- moeda virtual `LQ`
-- mini game de foco para desestresse
-- indicadores de produtividade para gestor e trabalhador
+- `Empresarial`: gestor cria, distribui, acompanha e valida tarefas dos colaboradores
+- `Residencial`: responsavel organiza e valida a rotina em casa
 
-## Objetivo Academico
+## Objetivo academico
 
-Este projeto foi desenvolvido para a disciplina com foco em:
+Este projeto foi preparado para a disciplina com foco em:
 
 - demonstracao funcional do sistema
-- organizacao visual e narrativa do app
+- remodelacao visual profissional do frontend
 - processo SDD
-- testes automatizados com evidencias
-- relatorio de seguranca com base em OWASP
+- testes automatizados com Playwright e prints de evidencia
+- relatorio de seguranca baseado em OWASP
 
-## Funcionalidades Principais
+## Funcionalidades principais
 
-### 1. Jornada de Acesso
+### 1. Acesso e cadastro
 
 - escolha do ambiente: `Empresarial` ou `Residencial`
-- escolha da classe do usuario
-- cadastro com nome, senha e companheiro
-- login com usuario salvo localmente
+- escolha do perfil do usuario
+- cadastro com nome, senha, observacao e companheiro visual
+- login local com recuperacao da sessao salva
 
-### 2. Painel Principal
+### 2. Painel principal
 
-- dashboard com resumo da jornada
-- leitura de produtividade
-- resumo narrativo do capitulo atual
-- acesso rapido para missoes e Arena
+- dashboard com resumo da operacao ou do desempenho pessoal
+- cards com indicadores
+- graficos de barras, linha e pizza
+- leitura de produtividade para o gestor
+- barra de XP, nivel e progresso para o colaborador
 
 ### 3. Missoes
 
 - gestor cria missoes
-- trabalhador acompanha suas tarefas
-- fluxo de aprovacao visual
-- justificativa de atraso ou nao conclusao
+- colaborador pega a missao
+- envio de conclusao com justificativa de atraso
+- envio de motivo de nao conclusao
+- aprovacao final pelo superior
 
-### 4. Arena
+### 4. Validacoes
 
-- mini game "Ritual das Runas"
+- fila de aprovacoes
+- justificativas registradas
+- leitura visual da carga de validacao
+
+### 5. Recompensas
+
+- XP calculado automaticamente
+- moeda virtual `LQ`
+- previsao de `LQS` como recompensa especial
+- resumo visual do progresso
+
+### 6. Perfil
+
+- dados do usuario
+- nivel, XP, LQ e desempenho geral
+- resumo do papel do perfil na demonstracao
+
+### 7. Foco
+
+- mini modulo de concentracao
 - recompensa em `LQ`
 - historico de sessoes
-- impacto no indicador de foco
+- impacto no indicador de foco do usuario
 
 ## Tecnologias
 
@@ -62,31 +80,17 @@ Este projeto foi desenvolvido para a disciplina com foco em:
 - Playwright
 - TypeScript
 
-## Estrutura de Entrega da Disciplina
+## Estrutura da entrega
 
-### Processo SDD
+- Processo SDD: `docs/SDD-processo.md`
+- Testes e evidencias: `docs/Testes-Playwright.md`
+- Relatorio OWASP: `docs/OWASP-relatorio.md`
+- Relatorio final detalhado: `docs/Relatorio-Final-LifeQuest.md`
+- Resumo final: `docs/Resumo-Final-LifeQuest.md`
+- Casos E2E: `tests/e2e/lifequest.spec.ts`
+- Evidencias: `tests/evidencias/`
 
-Documento:
-
-- [docs/SDD-processo.md](C:\Users\joaog\OneDrive\Área de Trabalho\Codigo Do App LifeQuest\LifeQuest\docs\SDD-processo.md)
-
-### Testes Automatizados
-
-Casos e evidencias:
-
-- [docs/Testes-Playwright.md](C:\Users\joaog\OneDrive\Área de Trabalho\Codigo Do App LifeQuest\LifeQuest\docs\Testes-Playwright.md)
-- [tests/e2e/lifequest.spec.ts](C:\Users\joaog\OneDrive\Área de Trabalho\Codigo Do App LifeQuest\LifeQuest\tests\e2e\lifequest.spec.ts)
-- [tests/evidencias](C:\Users\joaog\OneDrive\Área de Trabalho\Codigo Do App LifeQuest\LifeQuest\tests\evidencias)
-
-### Relatorio OWASP
-
-Documento:
-
-- [docs/OWASP-relatorio.md](C:\Users\joaog\OneDrive\Área de Trabalho\Codigo Do App LifeQuest\LifeQuest\docs\OWASP-relatorio.md)
-
-## Como Rodar o Projeto
-
-Dentro da pasta do projeto:
+## Como rodar o projeto
 
 ```powershell
 cd "C:\Users\joaog\OneDrive\Área de Trabalho\Codigo Do App LifeQuest\LifeQuest"
@@ -99,39 +103,24 @@ Rodar o banco local:
 npm run server
 ```
 
-Rodar o app:
+Rodar o app em modo mais estavel para a demo:
 
 ```powershell
-npx expo start
+npx expo start --offline -c
 ```
 
-## Como Rodar os Testes
+## Como rodar os testes
 
 ```powershell
 npm run test:e2e
 ```
 
-## Resultado Atual dos Testes
+## Resultado atual
 
-- 10 casos automatizados
-- 10 evidencias com print
-- execucao validada com Playwright
+- 10 casos automatizados em Playwright
+- 10 evidencias PNG no repositorio
+- fluxo principal cobrindo cadastro, login, missoes, dashboard, foco e navegacao
 
-## Validacoes Realizadas
+## Observacoes de seguranca
 
-- `npx tsc --noEmit`
-- `npm run test:e2e`
-
-## Observacoes de Seguranca
-
-O projeto possui relatorio OWASP com itens:
-
-- resolvidos
-- parcialmente resolvidos
-- pendentes para producao
-
-Como o foco da disciplina esta no frontend e demonstracao, alguns itens de seguranca dependem de backend real para resolucao completa, como autenticacao robusta, autorizacao de servidor e armazenamento seguro de credenciais.
-
-## Texto Curto Para Apresentacao
-
-O LifeQuest e um aplicativo mobile em Expo que gamifica tarefas reais por meio de missoes, progresso e recompensas. No projeto, o gestor cria missoes, o trabalhador acompanha sua jornada, evolui com XP, recebe LQ e pode usar a Arena para foco e desestresse. Alem da parte visual e funcional, o projeto tambem inclui processo SDD, 10 testes automatizados com Playwright e um relatorio de seguranca baseado em OWASP.
+O projeto inclui um relatorio OWASP com itens resolvidos, parcialmente resolvidos e pendentes. Como a proposta atual e de demonstracao frontend, alguns pontos dependem de backend real para uma resolucao completa em producao.

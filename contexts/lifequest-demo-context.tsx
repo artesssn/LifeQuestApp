@@ -167,6 +167,7 @@ type DemoContextValue = {
 
 const STORAGE_KEY = 'lifequest-demo-state-v3';
 const JSON_SERVER_PORT = 3001;
+const bundledDb = require('../db.json') as { missions?: Mission[] };
 
 const DemoContext = createContext<DemoContextValue | undefined>(undefined);
 
@@ -394,6 +395,10 @@ async function requestJsonServer<T>(path: string, init?: RequestInit): Promise<T
   return (await response.json()) as T;
 }
 
+function getBundledMissions(environment: EnvironmentType) {
+  return (bundledDb.missions ?? []).filter((mission) => mission.environment === environment);
+}
+
 async function runMissionMutation(action: () => Promise<void>, onError: (message: string) => void) {
   try {
     await action();
@@ -466,11 +471,13 @@ export function LifeQuestDemoProvider({ children }: { children: ReactNode }) {
 
     try {
       const data = await requestJsonServer<Mission[]>('/missions?_sort=createdAt&_order=desc');
-      setMissions(data.filter((mission) => mission.environment === sharedEnvironment));
+      const filtered = data.filter((mission) => mission.environment === sharedEnvironment);
+      setMissions(filtered.length > 0 ? filtered : getBundledMissions(sharedEnvironment));
       setMissionError(null);
     } catch {
+      setMissions(getBundledMissions(sharedEnvironment));
       setMissionError(
-        'Nao foi possivel sincronizar as missoes. Inicie o json-server para compartilhar as tarefas.'
+        'Json-server indisponivel. Exibindo a base local de demonstracao com as missoes do projeto.'
       );
     }
   };

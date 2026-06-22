@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, StyleSheet, Text, View } from 'react-native';
 
 import { lifeQuestTheme } from '@/constants/lifequest-theme';
+import { lifeQuestTypography } from '@/constants/lifequest-typography';
 
 type Props = {
   currentLevel: number;
@@ -154,8 +155,8 @@ const styles = StyleSheet.create({
   },
   levelUpText: {
     color: lifeQuestTheme.colors.success,
+    fontFamily: lifeQuestTheme.fonts.label,
     fontSize: 13,
-    fontWeight: '800',
     textAlign: 'center',
   },
   header: {
@@ -165,14 +166,12 @@ const styles = StyleSheet.create({
     marginBottom: 12,
   },
   title: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 20,
-    fontWeight: '800',
+    ...lifeQuestTypography.cardTitle,
   },
   meta: {
     color: lifeQuestTheme.colors.muted,
+    fontFamily: lifeQuestTheme.fonts.label,
     fontSize: 13,
-    fontWeight: '700',
   },
   track: {
     backgroundColor: 'rgba(255,255,255,0.08)',
@@ -187,7 +186,7 @@ const styles = StyleSheet.create({
     height: '100%',
   },
   hint: {
-    color: lifeQuestTheme.colors.muted,
+    ...lifeQuestTypography.body,
     fontSize: 13,
     lineHeight: 20,
   },

@@ -5,6 +5,8 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LifeQuestBackground } from '@/components/lifequest-background';
+import { LineChartCard, MiniBarChart, PieChartCard, SegmentedProgressChart } from '@/components/lifequest-charts';
+import { LifeQuestMenu } from '@/components/lifequest-menu';
 import { XpProgressCard } from '@/components/xp-progress-card';
 import {
   getLoreHeader,
@@ -129,6 +131,34 @@ export default function DashboardScreen() {
   const loreHeader = getLoreHeader(profile.role, profile.environment);
   const currentChapter = getPerformanceChapter(activeInsights, canCreateMissions);
   const nextMilestone = getNextMilestone(activeInsights, canCreateMissions);
+  const operationPressure = canCreateMissions
+    ? awaitingApprovalMissions.length + issueReportedMissions.length
+    : activeMissions.length + awaitingApprovalMissions.length;
+  const pressureLabel =
+    operationPressure >= 4
+      ? 'Atencao alta'
+      : operationPressure >= 2
+        ? 'Fluxo moderado'
+        : 'Fluxo controlado';
+  const suggestions = canCreateMissions
+    ? [
+        awaitingApprovalMissions.length > 0
+          ? `Voce tem ${awaitingApprovalMissions.length} entrega${awaitingApprovalMissions.length > 1 ? 's' : ''} esperando aprovacao.`
+          : 'Nao existem entregas aguardando aprovacao agora.',
+        issueReportedMissions.length > 0
+          ? `Existem ${issueReportedMissions.length} justificativa${issueReportedMissions.length > 1 ? 's' : ''} para revisar com a equipe.`
+          : 'Nenhuma justificativa de falha aberta no momento.',
+        `O foco medio da equipe esta em ${teamInsights?.focusIndex ?? 0}%. Use o modulo de foco como pausa estrategica quando o ritmo cair.`,
+      ]
+    : [
+        activeMissions.length > 0
+          ? `Ha ${activeMissions.length} missao${activeMissions.length > 1 ? 'es' : ''} pronta${activeMissions.length > 1 ? 's' : ''} para voce assumir.`
+          : 'No momento, nao existem novas missoes para pegar.',
+        awaitingApprovalMissions.length > 0
+          ? `Voce possui ${awaitingApprovalMissions.length} entrega${awaitingApprovalMissions.length > 1 ? 's' : ''} em analise do superior.`
+          : 'Nenhuma entrega sua esta aguardando aprovacao agora.',
+        `Seu foco acumulado esta em ${personalInsights?.focusIndex ?? 0}%. Um treino rapido pode ajudar antes da proxima tarefa.`,
+      ];
   const initials = profile.name
     .split(' ')
     .map((chunk) => chunk[0])
@@ -139,10 +169,17 @@ export default function DashboardScreen() {
   return (
     <LifeQuestBackground>
       <SafeAreaView style={styles.container}>
+        <LifeQuestMenu
+          currentRoute="index"
+          onLogout={() => {
+            logout();
+            router.replace('/login' as never);
+          }}
+        />
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <View style={styles.heroCard} testID="dashboard-hero">
             <View style={styles.heroTopRow}>
-              <Text style={styles.kicker}>LIFEQUEST CONTROL</Text>
+              <Text style={styles.kicker}>LIFEQUEST</Text>
               <Pressable
                 onPress={() => {
                   logout();
@@ -164,7 +201,7 @@ export default function DashboardScreen() {
                   {environmentLabels[profile.environment]} • {roleLabels[profile.role]}
                 </Text>
                 <Text style={styles.loreTitle}>
-                  {loreHeader.roleTitle} do {loreHeader.environmentTitle}
+                  {loreHeader.roleTitle} • {loreHeader.environmentTitle}
                 </Text>
                 <Text style={styles.identityNote}>
                   {canCreateMissions
@@ -205,18 +242,40 @@ export default function DashboardScreen() {
           </View>
 
           <View style={styles.storyCard} testID="dashboard-story-card">
-            <Text style={styles.storyEyebrow}>CAPITULO ATUAL</Text>
+            <Text style={styles.storyEyebrow}>STATUS ATUAL</Text>
             <Text style={styles.storyTitle}>
-              {canCreateMissions ? 'Estado do reino operacional' : 'Estado da sua jornada'}
+              {canCreateMissions ? 'Resumo da operacao' : 'Resumo do seu desempenho'}
             </Text>
             <Text style={styles.storyBody}>{currentChapter}</Text>
             <View style={styles.storyDivider} />
-            <Text style={styles.storyEyebrow}>PROXIMO MARCO</Text>
+            <Text style={styles.storyEyebrow}>PROXIMA ACAO</Text>
             <Text style={styles.storyBody}>{nextMilestone}</Text>
           </View>
 
           {canCreateMissions && teamInsights ? (
             <>
+              <MiniBarChart
+                title="Comparativo da equipe"
+                subtitle="Leitura visual dos principais indicadores do momento."
+                data={[
+                  { label: 'Score', value: teamInsights.score, color: lifeQuestTheme.colors.accent },
+                  { label: 'Foco', value: teamInsights.focusIndex, color: lifeQuestTheme.colors.warning },
+                  { label: 'Prazo', value: teamInsights.onTimeRate, color: lifeQuestTheme.colors.success },
+                ]}
+              />
+
+              <LineChartCard
+                title="Evolucao operacional"
+                subtitle="Linha simples para mostrar a progressao dos indicadores principais."
+                data={[
+                  { label: 'Score', value: teamInsights.score },
+                  { label: 'Prazo', value: teamInsights.onTimeRate },
+                  { label: 'Foco', value: teamInsights.focusIndex },
+                  { label: 'Ritmo', value: teamInsights.completionRate },
+                ]}
+                color={lifeQuestTheme.colors.accent}
+              />
+
               <View style={styles.sectionCard}>
                 <Text style={styles.sectionTitle}>Radar de produtividade</Text>
                 <Text style={styles.sectionIntro}>
@@ -256,7 +315,7 @@ export default function DashboardScreen() {
 
               <View style={styles.sectionCard}>
                 <View style={styles.sectionHeaderRow}>
-                  <Text style={styles.sectionTitle}>Ranking da equipe</Text>
+                  <Text style={styles.sectionTitle}>Desempenho da equipe</Text>
                   <Pressable
                     onPress={() => router.push('/explore')}
                     style={({ pressed }) => [styles.linkPill, pressed && styles.ctaPressed]}>
@@ -265,8 +324,8 @@ export default function DashboardScreen() {
                 </View>
                 {teamLeaderboard.length === 0 ? (
                   <Text style={styles.emptyText}>
-                    Ainda nao existe um historico suficiente. Assim que os funcionarios concluirem
-                    tarefas, o ranking vai aparecer aqui.
+                    Ainda nao existe historico suficiente. Assim que os funcionarios concluirem
+                    tarefas, a leitura de desempenho vai aparecer aqui.
                   </Text>
                 ) : (
                   teamLeaderboard.map((item, index) => (
@@ -274,11 +333,78 @@ export default function DashboardScreen() {
                   ))
                 )}
               </View>
+
+              <SegmentedProgressChart
+                title="Distribuicao do fluxo"
+                subtitle="Como as tarefas da equipe estao divididas neste momento."
+                data={[
+                  {
+                    label: 'Aprovadas',
+                    value: approvedMissions.length,
+                    color: lifeQuestTheme.colors.success,
+                  },
+                  {
+                    label: 'Aguardando',
+                    value: awaitingApprovalMissions.length,
+                    color: lifeQuestTheme.colors.warning,
+                  },
+                  {
+                    label: 'Justificadas',
+                    value: issueReportedMissions.length,
+                    color: lifeQuestTheme.colors.danger,
+                  },
+                ]}
+              />
+
+              <PieChartCard
+                title="Grafico de pizza da equipe"
+                subtitle="Distribuicao das tarefas por situacao atual."
+                centerLabel={`${approvedMissions.length + awaitingApprovalMissions.length + issueReportedMissions.length}`}
+                data={[
+                  {
+                    label: 'Aprovadas',
+                    value: approvedMissions.length,
+                    color: lifeQuestTheme.colors.success,
+                  },
+                  {
+                    label: 'Aguardando',
+                    value: awaitingApprovalMissions.length,
+                    color: lifeQuestTheme.colors.warning,
+                  },
+                  {
+                    label: 'Justificadas',
+                    value: issueReportedMissions.length,
+                    color: lifeQuestTheme.colors.danger,
+                  },
+                ]}
+              />
             </>
           ) : null}
 
           {!canCreateMissions && personalInsights ? (
             <>
+              <MiniBarChart
+                title="Seu desempenho em grafico"
+                subtitle="Comparacao simples para facilitar a leitura na demonstracao."
+                data={[
+                  { label: 'Score', value: personalInsights.score, color: lifeQuestTheme.colors.accent },
+                  { label: 'Foco', value: personalInsights.focusIndex, color: lifeQuestTheme.colors.warning },
+                  { label: 'Prazo', value: personalInsights.onTimeRate, color: lifeQuestTheme.colors.success },
+                ]}
+              />
+
+              <LineChartCard
+                title="Evolucao do usuario"
+                subtitle="Leitura em linha para apresentacao da evolucao pessoal."
+                data={[
+                  { label: 'Score', value: personalInsights.score },
+                  { label: 'Prazo', value: personalInsights.onTimeRate },
+                  { label: 'Foco', value: personalInsights.focusIndex },
+                  { label: 'Ritmo', value: personalInsights.completionRate },
+                ]}
+                color={lifeQuestTheme.colors.warning}
+              />
+
               <View style={styles.sectionCard}>
                 <Text style={styles.sectionTitle}>Seu desempenho</Text>
                 <Text style={styles.sectionIntro}>
@@ -311,7 +437,7 @@ export default function DashboardScreen() {
                 <ProgressStrip
                   label="Indice de foco"
                   value={personalInsights.focusIndex}
-                  note={`Melhor score do mini game: ${wellness?.bestScore ?? 0}`}
+                  note={`Melhor score do treino de foco: ${wellness?.bestScore ?? 0}`}
                   tone="warning"
                 />
               </View>
@@ -322,14 +448,59 @@ export default function DashboardScreen() {
                   <Text style={styles.spotlightValue}>
                     {personalInsights.averageClosureHours.toFixed(1)}h
                   </Text>
-                  <Text style={styles.spotlightNote}>Tempo medio para virar entrega aprovada.</Text>
+                  <Text style={styles.spotlightNote}>Tempo medio para uma entrega ser aprovada.</Text>
                 </View>
                 <View style={styles.spotlightCard}>
-                  <Text style={styles.spotlightLabel}>Mini game</Text>
+                  <Text style={styles.spotlightLabel}>Modulo de foco</Text>
                   <Text style={styles.spotlightValue}>{wellness?.totalRewardLq ?? 0} LQ</Text>
-                  <Text style={styles.spotlightNote}>Recompensas extras acumuladas na Arena.</Text>
+                  <Text style={styles.spotlightNote}>Recompensas extras acumuladas no modulo de foco.</Text>
                 </View>
               </View>
+
+              <SegmentedProgressChart
+                title="Situacao das suas entregas"
+                subtitle="Resumo rapido do que ja foi aprovado e do que ainda depende de retorno."
+                data={[
+                  {
+                    label: 'Aprovadas',
+                    value: approvedMissions.length,
+                    color: lifeQuestTheme.colors.success,
+                  },
+                  {
+                    label: 'Em analise',
+                    value: awaitingApprovalMissions.length,
+                    color: lifeQuestTheme.colors.warning,
+                  },
+                  {
+                    label: 'Ativas',
+                    value: activeMissions.length,
+                    color: lifeQuestTheme.colors.accent,
+                  },
+                ]}
+              />
+
+              <PieChartCard
+                title="Grafico de pizza das entregas"
+                subtitle="Distribuicao das tarefas ligadas ao seu perfil."
+                centerLabel={`${approvedMissions.length + awaitingApprovalMissions.length + activeMissions.length}`}
+                data={[
+                  {
+                    label: 'Aprovadas',
+                    value: approvedMissions.length,
+                    color: lifeQuestTheme.colors.success,
+                  },
+                  {
+                    label: 'Em analise',
+                    value: awaitingApprovalMissions.length,
+                    color: lifeQuestTheme.colors.warning,
+                  },
+                  {
+                    label: 'Ativas',
+                    value: activeMissions.length,
+                    color: lifeQuestTheme.colors.accent,
+                  },
+                ]}
+              />
             </>
           ) : null}
 
@@ -339,8 +510,8 @@ export default function DashboardScreen() {
             </Text>
             <Text style={styles.highlightText}>
               {canCreateMissions
-                ? 'Use a tela de missoes para criar objetivos mais claros, acompanhar a fila de aprovacao e agir antes de a produtividade cair.'
-                : 'Quando sentir desgaste, entre na Arena para ganhar foco e LQ extra. Depois volte para as missoes e mantenha seu score alto.'}
+                ? 'Use a tela de missoes para criar objetivos claros, acompanhar validacoes e agir antes de o fluxo perder produtividade.'
+                : 'Quando sentir desgaste, entre no modulo de foco para recuperar atencao e depois volte para as missoes.'}
             </Text>
             <View style={styles.ctaRow}>
               <Pressable
@@ -354,8 +525,53 @@ export default function DashboardScreen() {
               <Pressable
                 onPress={() => router.push('/arena' as never)}
                 style={({ pressed }) => [styles.secondaryCta, pressed && styles.ctaPressed]}>
-                <Text style={styles.secondaryCtaText}>Abrir arena</Text>
+                <Text style={styles.secondaryCtaText}>Abrir foco</Text>
               </Pressable>
+            </View>
+          </View>
+
+          <View style={styles.sectionCard}>
+            <Text style={styles.sectionTitle}>
+              {canCreateMissions ? 'Central de decisoes' : 'Leitura da sua rota'}
+            </Text>
+            <Text style={styles.sectionIntro}>
+              {canCreateMissions
+                ? 'Resumo pronto para voce agir rapido e mostrar produtividade real na demonstracao.'
+                : 'Esses sinais ajudam voce a entender se esta evoluindo bem ou se precisa recuperar o ritmo.'}
+            </Text>
+            <View style={styles.gridRow}>
+              <View style={styles.spotlightCard}>
+                <Text style={styles.spotlightLabel}>Pressao atual</Text>
+                <Text style={styles.spotlightValue}>{operationPressure}</Text>
+                <Text style={styles.spotlightNote}>{pressureLabel}</Text>
+              </View>
+              <View style={styles.spotlightCard}>
+                <Text style={styles.spotlightLabel}>
+                  {canCreateMissions ? 'Fila critica' : 'Consistencia'}
+                </Text>
+                <Text style={styles.spotlightValue}>
+                  {canCreateMissions
+                    ? awaitingApprovalMissions.length
+                    : `${personalInsights?.onTimeRate ?? 0}%`}
+                </Text>
+                <Text style={styles.spotlightNote}>
+                  {canCreateMissions
+                    ? 'Itens aguardando sua validacao.'
+                    : personalInsights?.reliability ?? 'Sem historico suficiente.'}
+                </Text>
+              </View>
+            </View>
+            <View style={styles.recommendationList}>
+              {suggestions.map((suggestion) => (
+                <View key={suggestion} style={styles.recommendationRow}>
+                  <MaterialIcons
+                    color={lifeQuestTheme.colors.accent}
+                    name="check-circle"
+                    size={18}
+                  />
+                  <Text style={styles.recommendationText}>{suggestion}</Text>
+                </View>
+              ))}
             </View>
           </View>
 
@@ -375,7 +591,7 @@ export default function DashboardScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 40 },
+  content: { paddingHorizontal: 24, paddingTop: 86, paddingBottom: 40 },
   heroCard: {
     backgroundColor: 'rgba(255,255,255,0.05)',
     borderColor: lifeQuestTheme.colors.cardBorder,
@@ -739,6 +955,24 @@ const styles = StyleSheet.create({
     color: lifeQuestTheme.colors.muted,
     fontSize: 14,
     lineHeight: 22,
+  },
+  recommendationList: {
+    gap: 10,
+  },
+  recommendationRow: {
+    alignItems: 'flex-start',
+    backgroundColor: 'rgba(255,255,255,0.03)',
+    borderRadius: 18,
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  recommendationText: {
+    color: lifeQuestTheme.colors.muted,
+    flex: 1,
+    fontSize: 13,
+    lineHeight: 20,
   },
   linkPill: {
     backgroundColor: 'rgba(255,255,255,0.08)',

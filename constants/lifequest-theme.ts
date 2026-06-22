@@ -8,11 +8,14 @@ export const lifeQuestTheme = {
   colors: {
     background: '#171A20',
     backgroundStrong: '#11141A',
+    backgroundPanel: '#1D212A',
     card: '#272C36',
     cardSoft: '#2F3542',
+    cardElevated: '#303847',
     cardBorder: 'rgba(255,255,255,0.08)',
     text: '#F5F7FB',
     muted: '#9DA6B5',
+    mutedStrong: '#B7C0CF',
     accent: '#5C8DFF',
     accentSoft: 'rgba(92, 141, 255, 0.18)',
     success: '#2DD881',
@@ -22,14 +25,37 @@ export const lifeQuestTheme = {
     danger: '#FF6B6B',
     line: 'rgba(255,255,255,0.06)',
   },
-  gradient: ['#1B1E25', '#202430', '#171A20'] as const,
+  gradient: ['#171B23', '#202633', '#171A20'] as const,
+  fonts: {
+    display: 'Sora_800ExtraBold',
+    heading: 'Sora_700Bold',
+    title: 'Sora_600SemiBold',
+    body: 'Manrope_500Medium',
+    bodyStrong: 'Manrope_700Bold',
+    label: 'Manrope_600SemiBold',
+  },
+  radius: {
+    sm: 16,
+    md: 22,
+    lg: 28,
+    xl: 34,
+  },
+  shadow: {
+    card: {
+      shadowColor: '#000',
+      shadowOpacity: 0.18,
+      shadowRadius: 16,
+      shadowOffset: { width: 0, height: 8 },
+      elevation: 6,
+    },
+  },
 };
 
 export const roleLabels = {
-  guardiao: 'Guardião',
-  heroi: 'Herói',
-  representante: 'Representante',
-  profissionais: 'Profissionais',
+  guardiao: 'Responsavel',
+  heroi: 'Usuario',
+  representante: 'Gestor',
+  profissionais: 'Colaborador',
 } as const;
 
 export const creatorRoles: RoleType[] = ['guardiao', 'representante'];

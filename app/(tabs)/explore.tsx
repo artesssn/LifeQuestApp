@@ -5,6 +5,7 @@ import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LifeQuestBackground } from '@/components/lifequest-background';
+import { LifeQuestMenu } from '@/components/lifequest-menu';
 import { XpProgressCard } from '@/components/xp-progress-card';
 import {
   getMissionLore,
@@ -107,6 +108,20 @@ export default function MissionsScreen() {
     return null;
   }
 
+  const availableToClaimCount = activeMissions.filter((mission) => !mission.assigneeId).length;
+  const mineInProgressCount = activeMissions.filter((mission) => mission.assigneeId === accountId).length;
+  const missionLoadCards = canCreateMissions
+    ? [
+        { label: 'Em andamento', value: activeMissions.length },
+        { label: 'Aguardando aprovacao', value: awaitingApprovalMissions.length },
+        { label: 'Nao concluidas', value: issueReportedMissions.length },
+      ]
+    : [
+        { label: 'Disponiveis', value: availableToClaimCount },
+        { label: 'Assumidas por voce', value: mineInProgressCount },
+        { label: 'Aprovadas', value: approvedMissions.length },
+      ];
+
   const clearMissionDraft = (missionId: string) => {
     setCompletionNotes((current) => ({ ...current, [missionId]: '' }));
     setDelayNotes((current) => ({ ...current, [missionId]: '' }));
@@ -116,9 +131,10 @@ export default function MissionsScreen() {
   return (
     <LifeQuestBackground>
       <SafeAreaView style={styles.container}>
+        <LifeQuestMenu currentRoute="explore" />
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.kicker}>MISSOES</Text>
-          <Text style={styles.title} testID="missions-title">Fluxo de validacao</Text>
+          <Text style={styles.title} testID="missions-title">Gestao de missoes</Text>
           <Text style={styles.subtitle}>
             {canCreateMissions
               ? `Perfil ${roleLabels[profile.role]}: cria missoes, recebe justificativas e aprova a entrega final.`
@@ -144,24 +160,33 @@ export default function MissionsScreen() {
             <Text style={styles.infoText}>
               {canCreateMissions
                 ? `${teamInsights?.approvedCount ?? 0} missoes aprovadas, ${teamInsights?.pendingCount ?? 0} em andamento e foco medio da equipe em ${teamInsights?.focusIndex ?? 0}%.`
-                : `${personalInsights?.approvedCount ?? 0} aprovadas, foco em ${personalInsights?.focusIndex ?? 0}% e ${wellness?.totalRewardLq ?? 0} LQ extras conquistados na Arena.`}
+                : `${personalInsights?.approvedCount ?? 0} aprovadas, foco em ${personalInsights?.focusIndex ?? 0}% e ${wellness?.totalRewardLq ?? 0} LQ extras conquistados no modulo de foco.`}
             </Text>
             <Pressable
               onPress={() => router.push('/arena' as never)}
               style={({ pressed }) => [styles.submitButton, styles.infoButton, pressed && styles.buttonPressed]}>
               <MaterialIcons color={lifeQuestTheme.colors.text} name="sports-esports" size={20} />
               <Text style={styles.submitButtonText}>
-                {canCreateMissions ? 'Ver Arena da equipe' : 'Entrar na Arena'}
+                {canCreateMissions ? 'Ver modulo de foco' : 'Entrar no foco'}
               </Text>
             </Pressable>
           </View>
 
           <View style={styles.infoCard}>
             <Text style={styles.infoTitle}>
-              {canCreateMissions ? 'Narrativa da campanha' : 'Sua campanha atual'}
+              {canCreateMissions ? 'Resumo da operacao' : 'Resumo do seu momento'}
             </Text>
             <Text style={styles.infoText}>{chapter}</Text>
             <Text style={styles.storyHint}>{nextMilestone}</Text>
+          </View>
+
+          <View style={styles.metricsStrip}>
+            {missionLoadCards.map((card) => (
+              <View key={card.label} style={styles.metricMiniCard}>
+                <Text style={styles.metricMiniValue}>{card.value}</Text>
+                <Text style={styles.metricMiniLabel}>{card.label}</Text>
+              </View>
+            ))}
           </View>
 
           {canCreateMissions ? (
@@ -643,9 +668,9 @@ export default function MissionsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 24, paddingTop: 20, paddingBottom: 42 },
+  content: { paddingHorizontal: 24, paddingTop: 86, paddingBottom: 42 },
   kicker: { color: lifeQuestTheme.colors.accent, fontSize: 12, fontWeight: '800', marginBottom: 10 },
-  title: { color: lifeQuestTheme.colors.text, fontSize: 32, fontWeight: '800', lineHeight: 40, marginBottom: 8 },
+  title: { color: lifeQuestTheme.colors.text, fontSize: 32, fontWeight: '800', lineHeight: 40, marginBottom: 8, paddingRight: 56 },
   subtitle: { color: lifeQuestTheme.colors.muted, fontSize: 15, lineHeight: 23, marginBottom: 20 },
   errorText: { color: lifeQuestTheme.colors.warning, fontSize: 13, lineHeight: 20, marginBottom: 16 },
   formCard: { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: lifeQuestTheme.colors.cardBorder, borderRadius: 26, borderWidth: 1, marginBottom: 22, padding: 18 },
@@ -654,6 +679,18 @@ const styles = StyleSheet.create({
   infoText: { color: lifeQuestTheme.colors.muted, fontSize: 15, lineHeight: 23 },
   storyHint: { color: lifeQuestTheme.colors.text, fontSize: 13, lineHeight: 20, marginTop: 12, opacity: 0.88 },
   infoButton: { marginTop: 14 },
+  metricsStrip: { flexDirection: 'row', gap: 10, marginBottom: 22 },
+  metricMiniCard: {
+    backgroundColor: 'rgba(255,255,255,0.05)',
+    borderColor: lifeQuestTheme.colors.cardBorder,
+    borderRadius: 20,
+    borderWidth: 1,
+    flex: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 16,
+  },
+  metricMiniValue: { color: lifeQuestTheme.colors.text, fontSize: 23, fontWeight: '800', marginBottom: 6 },
+  metricMiniLabel: { color: lifeQuestTheme.colors.muted, fontSize: 12, lineHeight: 18 },
   sectionTitle: { color: lifeQuestTheme.colors.text, fontSize: 19, fontWeight: '800', marginBottom: 14 },
   inlineLabel: { color: lifeQuestTheme.colors.text, fontSize: 14, fontWeight: '700', marginBottom: 10 },
   input: { backgroundColor: lifeQuestTheme.colors.card, borderRadius: 18, color: lifeQuestTheme.colors.text, fontSize: 15, marginBottom: 12, minHeight: 52, paddingHorizontal: 16, paddingVertical: 14 },

@@ -3,36 +3,38 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LifeQuestAuthShell } from '@/components/lifequest-auth-shell';
 import { LifeQuestBackground } from '@/components/lifequest-background';
-import { environmentLabels, lifeQuestTheme, roleLabels } from '@/constants/lifequest-theme';
+import { environmentLabels, lifeQuestTheme } from '@/constants/lifequest-theme';
+import { lifeQuestTypography } from '@/constants/lifequest-typography';
 import { EnvironmentType, RoleType, useLifeQuestDemo } from '@/contexts/lifequest-demo-context';
 
-const OPTIONS_RESIDENTIAL = [
+const residentialOptions = [
   {
     id: 'guardiao',
-    title: 'Guardião',
-    subtitle: 'Pais ou responsáveis',
+    title: 'Responsavel',
+    subtitle: 'Cria e valida tarefas no ambiente residencial.',
     icon: 'shield',
   },
   {
     id: 'heroi',
-    title: 'Herói',
-    subtitle: 'Cumprir tarefas',
+    title: 'Usuario',
+    subtitle: 'Executa atividades e acompanha o proprio progresso.',
     icon: 'person',
   },
 ] satisfies { id: RoleType; title: string; subtitle: string; icon: keyof typeof MaterialIcons.glyphMap }[];
 
-const OPTIONS_BUSINESS = [
+const businessOptions = [
   {
     id: 'representante',
-    title: 'Representante',
-    subtitle: 'Gestor ou administrador',
+    title: 'Gestor',
+    subtitle: 'Gerencia tarefas, validacoes e produtividade da equipe.',
     icon: 'badge',
   },
   {
     id: 'profissionais',
-    title: 'Profissionais',
-    subtitle: 'Cumprir tarefas',
+    title: 'Colaborador',
+    subtitle: 'Recebe, assume e conclui as missoes operacionais.',
     icon: 'engineering',
   },
 ] satisfies { id: RoleType; title: string; subtitle: string; icon: keyof typeof MaterialIcons.glyphMap }[];
@@ -47,55 +49,51 @@ export default function EscolhaClasseScreen() {
     return null;
   }
 
-  const options = tipo === 'residencial' ? OPTIONS_RESIDENTIAL : OPTIONS_BUSINESS;
+  const options = tipo === 'residencial' ? residentialOptions : businessOptions;
 
   return (
     <LifeQuestBackground>
       <SafeAreaView style={styles.container}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          <Text style={styles.label}>class</Text>
-          <Text style={styles.title} testID="class-title">Escolha de classe</Text>
-          <Text style={styles.subtitle}>
-            Você selecionou o ambiente {environmentLabels[tipo].toLowerCase()}. Agora escolha o seu
-            papel dentro do sistema.
-          </Text>
+        <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+          <LifeQuestAuthShell
+            kicker="Perfil"
+            title="Escolha o papel do usuario"
+            subtitle={`Voce selecionou ${environmentLabels[tipo].toLowerCase()}. Agora defina o tipo de acesso para continuar.`}
+            sideTitle="Como apresentar"
+            sideBody="Explique que o superior cria tarefas e valida resultados, enquanto o executor assume, conclui e recebe progresso no sistema.">
+            <View style={styles.list}>
+              {options.map((option) => (
+                <Pressable
+                  key={option.id}
+                  onPress={() => {
+                    setJourney(tipo, option.id);
+                    router.push('/cadastro' as never);
+                  }}
+                  style={({ pressed }) => [styles.classButton, pressed && styles.classButtonPressed]}
+                  testID={`role-${option.id}`}>
+                  <View style={styles.classIconWrap}>
+                    <MaterialIcons
+                      color={lifeQuestTheme.colors.text}
+                      name={option.icon}
+                      size={22}
+                    />
+                  </View>
+                  <View style={styles.classText}>
+                    <Text style={styles.classTitle}>{option.title}</Text>
+                    <Text style={styles.classSubtitle}>{option.subtitle}</Text>
+                  </View>
+                  <MaterialIcons color={lifeQuestTheme.colors.mutedStrong} name="arrow-forward" size={20} />
+                </Pressable>
+              ))}
+            </View>
 
-          <View style={styles.list}>
-            {options.map((option) => (
-              <Pressable
-                key={option.id}
-                onPress={() => {
-                  setJourney(tipo, option.id);
-                  router.push('/cadastro' as never);
-                }}
-                testID={`role-${option.id}`}
-                style={({ pressed }) => [styles.classButton, pressed && styles.classButtonPressed]}>
-                <MaterialIcons
-                  color={lifeQuestTheme.colors.accent}
-                  name={option.icon}
-                  size={24}
-                  style={styles.classIcon}
-                />
-                <View style={styles.classText}>
-                  <Text style={styles.classTitle}>{option.title}</Text>
-                  <Text style={styles.classSubtitle}>{option.subtitle}</Text>
-                </View>
-                <MaterialIcons color={lifeQuestTheme.colors.muted} name="chevron-right" size={22} />
-              </Pressable>
-            ))}
-          </View>
-
-          <View style={styles.tipCard}>
-            <Text style={styles.tipTitle}>Como explicar na apresentação</Text>
-            <Text style={styles.tipBody}>
-              Mostre que o responsável cria missões, o jogador executa a tarefa real e o sistema
-              registra progresso com recompensas.
-            </Text>
-          </View>
-
-          <Text style={styles.footer}>
-            Classes: {options.map((item) => roleLabels[item.id]).join(' • ')}
-          </Text>
+            <View style={styles.infoBox}>
+              <Text style={styles.infoTitle}>Resumo do fluxo</Text>
+              <Text style={styles.infoBody}>
+                O perfil escolhido altera a experiencia do app: gestor visualiza criacao, validacao e produtividade; colaborador visualiza execucao, foco e recompensas.
+              </Text>
+            </View>
+          </LifeQuestAuthShell>
         </ScrollView>
       </SafeAreaView>
     </LifeQuestBackground>
@@ -103,95 +101,65 @@ export default function EscolhaClasseScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
+  container: { flex: 1 },
+  content: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingTop: 40,
-    paddingBottom: 36,
-  },
-  label: {
-    color: lifeQuestTheme.colors.muted,
-    fontSize: 14,
-    marginBottom: 12,
-    textAlign: 'center',
-  },
-  title: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 38,
-    fontWeight: '800',
-    lineHeight: 46,
-    marginBottom: 18,
-    textAlign: 'center',
-  },
-  subtitle: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 18,
-    fontWeight: '600',
-    lineHeight: 28,
-    marginBottom: 36,
-    textAlign: 'center',
+    paddingHorizontal: 24,
+    paddingVertical: 28,
   },
   list: {
     gap: 14,
-    marginBottom: 28,
   },
   classButton: {
     alignItems: 'center',
-    backgroundColor: lifeQuestTheme.colors.cardSoft,
+    backgroundColor: lifeQuestTheme.colors.cardElevated,
     borderColor: lifeQuestTheme.colors.cardBorder,
-    borderRadius: 22,
+    borderRadius: lifeQuestTheme.radius.md,
     borderWidth: 1,
     flexDirection: 'row',
     minHeight: 88,
-    paddingHorizontal: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   classButtonPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.99 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.992 }],
   },
-  classIcon: {
-    marginRight: 16,
+  classIconWrap: {
+    alignItems: 'center',
+    backgroundColor: lifeQuestTheme.colors.accentSoft,
+    borderRadius: 18,
+    height: 50,
+    justifyContent: 'center',
+    marginRight: 14,
+    width: 50,
   },
   classText: {
     flex: 1,
   },
   classTitle: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 18,
-    fontWeight: '700',
+    ...lifeQuestTypography.cardTitle,
     marginBottom: 4,
   },
   classSubtitle: {
-    color: lifeQuestTheme.colors.muted,
-    fontSize: 14,
+    ...lifeQuestTypography.body,
+    fontSize: 13,
     lineHeight: 20,
   },
-  tipCard: {
-    backgroundColor: 'rgba(255,255,255,0.04)',
+  infoBox: {
+    backgroundColor: 'rgba(255,255,255,0.03)',
     borderColor: lifeQuestTheme.colors.cardBorder,
-    borderRadius: 24,
+    borderRadius: lifeQuestTheme.radius.md,
     borderWidth: 1,
-    marginBottom: 20,
-    padding: 20,
+    marginTop: 18,
+    padding: 16,
   },
-  tipTitle: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 18,
-    fontWeight: '700',
+  infoTitle: {
+    ...lifeQuestTypography.cardTitle,
     marginBottom: 8,
   },
-  tipBody: {
-    color: lifeQuestTheme.colors.muted,
-    fontSize: 15,
-    lineHeight: 24,
-  },
-  footer: {
-    color: lifeQuestTheme.colors.muted,
-    fontSize: 13,
-    textAlign: 'center',
+  infoBody: {
+    ...lifeQuestTypography.body,
   },
 });

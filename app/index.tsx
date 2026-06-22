@@ -4,13 +4,25 @@ import { useEffect } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { LifeQuestAuthShell } from '@/components/lifequest-auth-shell';
 import { LifeQuestBackground } from '@/components/lifequest-background';
 import { lifeQuestTheme } from '@/constants/lifequest-theme';
+import { lifeQuestTypography } from '@/constants/lifequest-typography';
 import { useLifeQuestDemo } from '@/contexts/lifequest-demo-context';
 
-const ENVIRONMENTS = [
-  { id: 'empresarial', label: 'Empresarial', icon: 'business' },
-  { id: 'residencial', label: 'Residencial', icon: 'home' },
+const environments = [
+  {
+    id: 'empresarial',
+    label: 'Ambiente empresarial',
+    subtitle: 'Gestao de tarefas, acompanhamento e validacao por lideranca.',
+    icon: 'business-center',
+  },
+  {
+    id: 'residencial',
+    label: 'Ambiente residencial',
+    subtitle: 'Organizacao da rotina em casa com supervisao dos responsaveis.',
+    icon: 'home-work',
+  },
 ] as const;
 
 export default function WelcomeScreen() {
@@ -38,7 +50,7 @@ export default function WelcomeScreen() {
       <LifeQuestBackground>
         <SafeAreaView style={styles.safeArea}>
           <View style={styles.loadingWrap}>
-            <Text style={styles.title}>Carregando LifeQuest...</Text>
+            <Text style={styles.loadingText}>Carregando LifeQuest...</Text>
           </View>
         </SafeAreaView>
       </LifeQuestBackground>
@@ -49,37 +61,46 @@ export default function WelcomeScreen() {
     <LifeQuestBackground>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.kicker} testID="welcome-kicker">Hello, welcome!</Text>
-          <Text style={styles.title} testID="welcome-title">Bem-vindo ao LifeQuest</Text>
-          <Text style={styles.subtitle}>Qual ambiente participa da sua jornada?</Text>
+          <LifeQuestAuthShell
+            kicker="LifeQuest Platform"
+            title="Gestao de tarefas com gamificacao e validacao real"
+            subtitle="Escolha o contexto do sistema para iniciar a demonstracao com uma estrutura mais profissional e clara."
+            sideTitle="Resumo do produto"
+            sideBody="O LifeQuest organiza tarefas de casa ou da empresa em missoes, com responsabilidade, aprovacao, XP, LQ e indicadores visuais de desempenho.">
+            <View style={styles.optionGroup}>
+              {environments.map((item) => (
+                <Pressable
+                  key={item.id}
+                  onPress={() => router.push(`/escolha-classe/${item.id}`)}
+                  style={({ pressed }) => [styles.optionCard, pressed && styles.optionCardPressed]}
+                  testID={`environment-${item.id}`}>
+                  <View style={styles.optionIconWrap}>
+                    <MaterialIcons color={lifeQuestTheme.colors.text} name={item.icon} size={24} />
+                  </View>
+                  <View style={styles.optionBody}>
+                    <Text style={styles.optionTitle}>{item.label}</Text>
+                    <Text style={styles.optionSubtitle}>{item.subtitle}</Text>
+                  </View>
+                  <MaterialIcons color={lifeQuestTheme.colors.mutedStrong} name="arrow-forward" size={20} />
+                </Pressable>
+              ))}
+            </View>
 
-          <View style={styles.optionGroup}>
-            {ENVIRONMENTS.map((item) => (
-              <Pressable
-                key={item.id}
-                onPress={() => router.push(`/escolha-classe/${item.id}`)}
-                testID={`environment-${item.id}`}
-                style={({ pressed }) => [styles.optionCard, pressed && styles.optionCardPressed]}>
-                <MaterialIcons
-                  color={lifeQuestTheme.colors.accent}
-                  name={item.icon}
-                  size={22}
-                  style={styles.optionIcon}
-                />
-                <Text style={styles.optionText}>{item.label}</Text>
-              </Pressable>
-            ))}
-          </View>
-
-          <View style={styles.infoCard}>
-            <Text style={styles.infoTitle}>O que é o LifeQuest</Text>
-            <Text style={styles.infoBody}>
-              Um app de gamificação que transforma tarefas do mundo real em missões RPG, com
-              progresso, moedas e validação por responsáveis.
-            </Text>
-          </View>
-
-          <Text style={styles.footer}>Projeto acadêmico com foco em frontend e narrativa do sistema.</Text>
+            <View style={styles.metricsRow}>
+              <View style={styles.metricChip}>
+                <Text style={styles.metricValue}>Missoes</Text>
+                <Text style={styles.metricLabel}>fluxo supervisionado</Text>
+              </View>
+              <View style={styles.metricChip}>
+                <Text style={styles.metricValue}>XP + LQ</Text>
+                <Text style={styles.metricLabel}>progresso visual</Text>
+              </View>
+              <View style={styles.metricChip}>
+                <Text style={styles.metricValue}>Aprovacao</Text>
+                <Text style={styles.metricLabel}>controle do gestor</Text>
+              </View>
+            </View>
+          </LifeQuestAuthShell>
         </ScrollView>
       </SafeAreaView>
     </LifeQuestBackground>
@@ -87,92 +108,83 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-  },
+  safeArea: { flex: 1 },
   content: {
     flexGrow: 1,
     justifyContent: 'center',
-    paddingHorizontal: 28,
-    paddingVertical: 36,
+    paddingHorizontal: 24,
+    paddingVertical: 28,
   },
   loadingWrap: {
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    paddingHorizontal: 28,
   },
-  kicker: {
-    color: lifeQuestTheme.colors.muted,
-    fontSize: 15,
-    marginBottom: 18,
-    textAlign: 'center',
-  },
-  title: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 44,
-    fontWeight: '800',
-    lineHeight: 52,
-    marginBottom: 18,
-    textAlign: 'center',
-  },
-  subtitle: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 24,
-    fontWeight: '600',
-    lineHeight: 31,
-    marginBottom: 48,
-    textAlign: 'center',
+  loadingText: {
+    ...lifeQuestTypography.sectionTitle,
   },
   optionGroup: {
-    gap: 18,
-    marginBottom: 36,
+    gap: 14,
   },
   optionCard: {
     alignItems: 'center',
-    backgroundColor: lifeQuestTheme.colors.cardSoft,
+    backgroundColor: lifeQuestTheme.colors.cardElevated,
     borderColor: lifeQuestTheme.colors.cardBorder,
-    borderRadius: 22,
+    borderRadius: lifeQuestTheme.radius.md,
     borderWidth: 1,
     flexDirection: 'row',
-    justifyContent: 'center',
-    minHeight: 76,
-    paddingHorizontal: 20,
+    minHeight: 94,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
   },
   optionCardPressed: {
-    opacity: 0.85,
-    transform: [{ scale: 0.99 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.992 }],
   },
-  optionIcon: {
-    marginRight: 12,
+  optionIconWrap: {
+    alignItems: 'center',
+    backgroundColor: lifeQuestTheme.colors.accentSoft,
+    borderRadius: 18,
+    height: 52,
+    justifyContent: 'center',
+    marginRight: 14,
+    width: 52,
   },
-  optionText: {
-    color: lifeQuestTheme.colors.text,
-    fontSize: 19,
-    fontWeight: '700',
+  optionBody: {
+    flex: 1,
   },
-  infoCard: {
+  optionTitle: {
+    ...lifeQuestTypography.cardTitle,
+    marginBottom: 4,
+  },
+  optionSubtitle: {
+    ...lifeQuestTypography.body,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+  metricsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginTop: 18,
+  },
+  metricChip: {
     backgroundColor: 'rgba(255,255,255,0.04)',
     borderColor: lifeQuestTheme.colors.cardBorder,
-    borderRadius: 24,
+    borderRadius: 18,
     borderWidth: 1,
-    padding: 22,
+    flex: 1,
+    padding: 14,
   },
-  infoTitle: {
+  metricValue: {
     color: lifeQuestTheme.colors.text,
-    fontSize: 18,
-    fontWeight: '700',
-    marginBottom: 10,
+    fontFamily: lifeQuestTheme.fonts.heading,
+    fontSize: 14,
+    marginBottom: 4,
   },
-  infoBody: {
+  metricLabel: {
     color: lifeQuestTheme.colors.muted,
-    fontSize: 15,
-    lineHeight: 24,
-  },
-  footer: {
-    color: lifeQuestTheme.colors.muted,
-    fontSize: 13,
-    marginTop: 24,
-    textAlign: 'center',
+    fontFamily: lifeQuestTheme.fonts.body,
+    fontSize: 12,
+    lineHeight: 18,
   },
 });

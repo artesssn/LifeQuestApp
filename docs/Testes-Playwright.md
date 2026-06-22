@@ -25,10 +25,16 @@ As evidencias em imagem sao salvas em:
 6. Cadastrar um funcionario e abrir o dashboard pessoal.
 7. Abrir a tela de missoes do funcionario com progresso de XP.
 8. Abrir a tela de missoes do gestor com formulario de criacao.
-9. Validar o mini game Arena e a geracao de recompensa.
-10. Navegar entre Painel, Missoes e Arena.
+9. Validar o modulo de foco e a geracao de recompensa.
+10. Navegar entre Painel, Missoes e Foco.
 
 ## Observacao
+
+As 10 evidencias ja estao presentes no repositorio e atendem ao requisito minimo da disciplina.
+
+Se for necessario atualizar os prints para a interface mais recente, basta executar novamente os testes com o `json-server` e o app web ativos.
+
+## Dependencias da execucao
 
 Os testes usam:
 

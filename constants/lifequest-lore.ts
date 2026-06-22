@@ -6,44 +6,44 @@ import type {
   WellnessRank,
 } from '@/contexts/lifequest-demo-context';
 
-const roleLoreTitles: Record<RoleType, string> = {
-  guardiao: 'Guardiao da Jornada',
-  heroi: 'Heroi em Evolucao',
-  representante: 'Comandante da Operacao',
-  profissionais: 'Especialista de Campo',
+const roleTitles: Record<RoleType, string> = {
+  guardiao: 'Responsavel residencial',
+  heroi: 'Usuario residencial',
+  representante: 'Gestor operacional',
+  profissionais: 'Colaborador em atividade',
 };
 
-const environmentLoreTitles: Record<EnvironmentType, string> = {
-  residencial: 'Santuario de Evolucao',
-  empresarial: 'Distrito de Alta Performance',
+const environmentTitles: Record<EnvironmentType, string> = {
+  residencial: 'Ambiente familiar',
+  empresarial: 'Ambiente empresarial',
 };
 
-const missionLore: Record<MissionKind, string> = {
-  Diaria: 'Missoes diarias sustentam a disciplina e constroem consistencia.',
-  Semanal: 'Missoes semanais medem constancia e capacidade de manter ritmo.',
-  Desafio: 'Desafios testam coragem, adaptacao e entrega sob pressao.',
-  Contrato: 'Contratos registram compromissos importantes com prazo e criterio claro.',
+const missionDescriptions: Record<MissionKind, string> = {
+  Diaria: 'Atividades de rotina para manter disciplina, organizacao e frequencia.',
+  Semanal: 'Tarefas acompanhadas ao longo da semana para medir constancia.',
+  Desafio: 'Entregas mais exigentes para testar foco, iniciativa e compromisso.',
+  Contrato: 'Meta formal com prazo, criterio de conclusao e recompensa definida.',
 };
 
-const rankLore: Record<WellnessRank, string> = {
-  steady: 'Seu foco ficou estavel e pronto para novas entregas.',
-  spark: 'Voce entrou em estado de energia e clareza acima da media.',
-  legendary: 'Sua sessao foi de elite e deixou a mente pronta para alta performance.',
+const rankDescriptions: Record<WellnessRank, string> = {
+  steady: 'Sessao concluida com estabilidade. Bom resultado para manter o foco.',
+  spark: 'Sessao acima da media. O usuario mostrou boa velocidade e concentracao.',
+  legendary: 'Sessao de alto desempenho. Excelente leitura de foco e resposta.',
 };
 
 export function getLoreHeader(role: RoleType, environment: EnvironmentType) {
   return {
-    roleTitle: roleLoreTitles[role],
-    environmentTitle: environmentLoreTitles[environment],
+    roleTitle: roleTitles[role],
+    environmentTitle: environmentTitles[environment],
   };
 }
 
 export function getMissionLore(kind: MissionKind) {
-  return missionLore[kind];
+  return missionDescriptions[kind];
 }
 
 export function getRankLore(rank: WellnessRank) {
-  return rankLore[rank];
+  return rankDescriptions[rank];
 }
 
 export function getPerformanceChapter(
@@ -54,19 +54,19 @@ export function getPerformanceChapter(
 
   if (score >= 85) {
     return canCreateMissions
-      ? 'A operacao entrou em fase de dominio: equipe alinhada, foco alto e entregas firmes.'
-      : 'Seu capitulo atual e de ascensao: voce esta entregando com consistencia e presenca.';
+      ? 'A equipe esta em alta performance, com boa consistencia de entregas e validacoes.'
+      : 'Seu desempenho esta forte, com boa regularidade nas entregas e no foco.';
   }
 
   if (score >= 60) {
     return canCreateMissions
-      ? 'A equipe vive uma fase de consolidacao: boa base, mas ainda com pontos de ajuste.'
-      : 'Sua jornada esta em consolidacao: o progresso e real e a proxima virada esta perto.';
+      ? 'A operacao esta estavel, mas ainda existem pontos de ajuste no fluxo das missoes.'
+      : 'Seu desempenho esta em crescimento, com espaco para melhorar previsao e constancia.';
   }
 
   return canCreateMissions
-    ? 'O reino precisa de reorganizacao: clareza nas missoes e aprovacoes mais proximas vao ajudar.'
-    : 'Seu personagem ainda esta no treino base: pequenas vitorias seguidas vao mudar seu ritmo.';
+    ? 'O fluxo de trabalho precisa de mais acompanhamento para ganhar ritmo e previsibilidade.'
+    : 'Seu historico ainda esta em formacao. Pequenas entregas aprovadas vao fortalecer seu resultado.';
 }
 
 export function getNextMilestone(
@@ -79,23 +79,23 @@ export function getNextMilestone(
 
   if (pending > 2) {
     return canCreateMissions
-      ? 'Priorize a fila de aprovacoes para nao travar o fluxo da equipe.'
-      : 'Feche as entregas em andamento antes de assumir novas missoes.';
+      ? 'Priorize a fila de validacoes para evitar acumulo de tarefas aguardando resposta.'
+      : 'Conclua o que ja esta em andamento antes de assumir novas missoes.';
   }
 
   if (issues > 0) {
     return canCreateMissions
-      ? 'Revise justificativas abertas e transforme bloqueios em novos acordos.'
-      : 'Use as justificativas como aprendizado para melhorar previsao e comunicacao.';
+      ? 'Analise as justificativas abertas para reduzir falhas e redefinir prazos com clareza.'
+      : 'Revise suas justificativas recentes e ajuste seu planejamento para a proxima entrega.';
   }
 
   if (focus < 55) {
     return canCreateMissions
-      ? 'Estimule pausas curtas e uso da Arena para manter a energia da equipe.'
-      : 'Uma sessao na Arena pode elevar seu foco antes da proxima entrega.';
+      ? 'Incentive pausas curtas e o uso do modulo de foco para preservar a energia da equipe.'
+      : 'Use o modulo de foco antes de uma tarefa importante para melhorar atencao e ritmo.';
   }
 
   return canCreateMissions
-    ? 'A equipe esta pronta para receber desafios mais estrategicos e contratos maiores.'
-    : 'Voce ja pode mirar em missoes mais exigentes para acelerar sua evolucao.';
+    ? 'A equipe esta pronta para receber contratos de missao e metas mais estrategicas.'
+    : 'Voce ja pode assumir atividades mais exigentes para acelerar sua evolucao.';
 }
