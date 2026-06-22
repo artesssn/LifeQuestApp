@@ -35,6 +35,10 @@ yarn-error.*
 
 # typescript
 *.tsbuildinfo
+playwright-report/
+test-results/
+tests/artifacts/
+.pw-home/
 
 app-example
 

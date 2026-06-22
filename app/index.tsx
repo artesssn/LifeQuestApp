@@ -49,8 +49,8 @@ export default function WelcomeScreen() {
     <LifeQuestBackground>
       <SafeAreaView style={styles.safeArea}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
-          <Text style={styles.kicker}>Hello, welcome!</Text>
-          <Text style={styles.title}>Bem-vindo ao LifeQuest</Text>
+          <Text style={styles.kicker} testID="welcome-kicker">Hello, welcome!</Text>
+          <Text style={styles.title} testID="welcome-title">Bem-vindo ao LifeQuest</Text>
           <Text style={styles.subtitle}>Qual ambiente participa da sua jornada?</Text>
 
           <View style={styles.optionGroup}>
@@ -58,6 +58,7 @@ export default function WelcomeScreen() {
               <Pressable
                 key={item.id}
                 onPress={() => router.push(`/escolha-classe/${item.id}`)}
+                testID={`environment-${item.id}`}
                 style={({ pressed }) => [styles.optionCard, pressed && styles.optionCardPressed]}>
                 <MaterialIcons
                   color={lifeQuestTheme.colors.accent}

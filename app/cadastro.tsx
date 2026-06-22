@@ -1,6 +1,6 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -46,8 +46,13 @@ export default function CadastroScreen() {
     [draftJourney, name, password]
   );
 
+  useEffect(() => {
+    if (!draftJourney) {
+      router.replace('/');
+    }
+  }, [draftJourney]);
+
   if (!draftJourney) {
-    router.replace('/');
     return null;
   }
 
@@ -56,7 +61,7 @@ export default function CadastroScreen() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.kicker}>Cadastro inicial</Text>
-          <Text style={styles.title}>Agora vamos parametrizar sua conta</Text>
+          <Text style={styles.title} testID="register-title">Agora vamos parametrizar sua conta</Text>
           <Text style={styles.subtitle}>
             Ambiente {environmentLabels[draftJourney.environment]} • classe {roleLabels[draftJourney.role]}
           </Text>
@@ -74,6 +79,7 @@ export default function CadastroScreen() {
                   <Pressable
                     key={companion.id}
                     onPress={() => setCompanionId(companion.id)}
+                    testID={`companion-${companion.id}`}
                     style={({ pressed }) => [
                       styles.avatarOption,
                       selected && styles.avatarOptionSelected,
@@ -112,6 +118,7 @@ export default function CadastroScreen() {
               placeholder="Digite seu nome para a demo"
               placeholderTextColor={lifeQuestTheme.colors.muted}
               style={styles.input}
+              testID="register-name-input"
               value={name}
             />
 
@@ -122,6 +129,7 @@ export default function CadastroScreen() {
               placeholderTextColor={lifeQuestTheme.colors.muted}
               secureTextEntry
               style={styles.input}
+              testID="register-password-input"
               value={password}
             />
 
@@ -133,6 +141,7 @@ export default function CadastroScreen() {
               placeholder="Opcional"
               placeholderTextColor={lifeQuestTheme.colors.muted}
               style={[styles.input, styles.inputMultiline]}
+              testID="register-limitation-input"
               textAlignVertical="top"
               value={limitation}
             />
@@ -153,6 +162,7 @@ export default function CadastroScreen() {
                 router.replace('/(tabs)');
               }
             }}
+            testID="register-submit-button"
             style={({ pressed }) => [
               styles.submitButton,
               disabled && styles.submitButtonDisabled,

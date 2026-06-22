@@ -54,7 +54,7 @@ export default function EscolhaClasseScreen() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={styles.label}>class</Text>
-          <Text style={styles.title}>Escolha de classe</Text>
+          <Text style={styles.title} testID="class-title">Escolha de classe</Text>
           <Text style={styles.subtitle}>
             Você selecionou o ambiente {environmentLabels[tipo].toLowerCase()}. Agora escolha o seu
             papel dentro do sistema.
@@ -68,6 +68,7 @@ export default function EscolhaClasseScreen() {
                   setJourney(tipo, option.id);
                   router.push('/cadastro' as never);
                 }}
+                testID={`role-${option.id}`}
                 style={({ pressed }) => [styles.classButton, pressed && styles.classButtonPressed]}>
                 <MaterialIcons
                   color={lifeQuestTheme.colors.accent}

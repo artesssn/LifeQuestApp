@@ -1,11 +1,16 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import { router } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { LifeQuestBackground } from '@/components/lifequest-background';
 import { XpProgressCard } from '@/components/xp-progress-card';
+import {
+  getMissionLore,
+  getNextMilestone,
+  getPerformanceChapter,
+} from '@/constants/lifequest-lore';
 import {
   creatorRoles,
   difficultyLabels,
@@ -46,21 +51,27 @@ function EmptyState({ text }: { text: string }) {
 
 export default function MissionsScreen() {
   const {
+    accountId,
     activeMissions,
     approveMissionCompletion,
     approvedMissions,
     awaitingApprovalMissions,
+    claimMission,
     createMission,
     currentLevel,
     currentLevelXp,
     hasAccounts,
     issueReportedMissions,
     levelProgressPercent,
+    missionError,
     nextLevelXp,
+    personalInsights,
     profile,
     reportMissionIssue,
     reopenMission,
     submitMissionForApproval,
+    teamInsights,
+    wellness,
   } = useLifeQuestDemo();
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -74,6 +85,9 @@ export default function MissionsScreen() {
   const [issueNotes, setIssueNotes] = useState<Record<string, string>>({});
 
   const canCreateMissions = Boolean(profile && creatorRoles.includes(profile.role));
+  const activeInsights = canCreateMissions ? teamInsights : personalInsights;
+  const chapter = getPerformanceChapter(activeInsights, canCreateMissions);
+  const nextMilestone = getNextMilestone(activeInsights, canCreateMissions);
   const canSubmitMission = useMemo(() => {
     return (
       title.trim().length >= 3 &&
@@ -83,8 +97,13 @@ export default function MissionsScreen() {
     );
   }, [description, dueLabel, lq, title]);
 
+  useEffect(() => {
+    if (!profile?.name) {
+      router.replace((hasAccounts ? '/login' : '/') as never);
+    }
+  }, [hasAccounts, profile?.name]);
+
   if (!profile?.name) {
-    router.replace((hasAccounts ? '/login' : '/') as never);
     return null;
   }
 
@@ -99,12 +118,14 @@ export default function MissionsScreen() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.kicker}>MISSOES</Text>
-          <Text style={styles.title}>Fluxo de validacao</Text>
+          <Text style={styles.title} testID="missions-title">Fluxo de validacao</Text>
           <Text style={styles.subtitle}>
             {canCreateMissions
               ? `Perfil ${roleLabels[profile.role]}: cria missoes, recebe justificativas e aprova a entrega final.`
-              : `Perfil ${roleLabels[profile.role]}: executa a tarefa, informa atraso ou problema e envia a conclusao para aprovacao.`}
+              : `Perfil ${roleLabels[profile.role]}: pega a missao, assume a responsabilidade e envia a conclusao para aprovacao.`}
           </Text>
+
+          {missionError ? <Text style={styles.errorText}>{missionError}</Text> : null}
 
           {!canCreateMissions ? (
             <XpProgressCard
@@ -116,6 +137,33 @@ export default function MissionsScreen() {
             />
           ) : null}
 
+          <View style={styles.infoCard}>
+            <Text style={styles.infoTitle}>
+              {canCreateMissions ? 'Visao operacional' : 'Sua leitura rapida'}
+            </Text>
+            <Text style={styles.infoText}>
+              {canCreateMissions
+                ? `${teamInsights?.approvedCount ?? 0} missoes aprovadas, ${teamInsights?.pendingCount ?? 0} em andamento e foco medio da equipe em ${teamInsights?.focusIndex ?? 0}%.`
+                : `${personalInsights?.approvedCount ?? 0} aprovadas, foco em ${personalInsights?.focusIndex ?? 0}% e ${wellness?.totalRewardLq ?? 0} LQ extras conquistados na Arena.`}
+            </Text>
+            <Pressable
+              onPress={() => router.push('/arena' as never)}
+              style={({ pressed }) => [styles.submitButton, styles.infoButton, pressed && styles.buttonPressed]}>
+              <MaterialIcons color={lifeQuestTheme.colors.text} name="sports-esports" size={20} />
+              <Text style={styles.submitButtonText}>
+                {canCreateMissions ? 'Ver Arena da equipe' : 'Entrar na Arena'}
+              </Text>
+            </Pressable>
+          </View>
+
+          <View style={styles.infoCard}>
+            <Text style={styles.infoTitle}>
+              {canCreateMissions ? 'Narrativa da campanha' : 'Sua campanha atual'}
+            </Text>
+            <Text style={styles.infoText}>{chapter}</Text>
+            <Text style={styles.storyHint}>{nextMilestone}</Text>
+          </View>
+
           {canCreateMissions ? (
             <View style={styles.formCard}>
               <Text style={styles.sectionTitle}>Nova missao</Text>
@@ -124,6 +172,7 @@ export default function MissionsScreen() {
                 placeholder="Titulo da missao"
                 placeholderTextColor={lifeQuestTheme.colors.muted}
                 style={styles.input}
+                testID="mission-title-input"
                 value={title}
               />
               <TextInput
@@ -131,6 +180,7 @@ export default function MissionsScreen() {
                 placeholder="Descricao da missao"
                 placeholderTextColor={lifeQuestTheme.colors.muted}
                 style={[styles.input, styles.inputMultiline]}
+                testID="mission-description-input"
                 textAlignVertical="top"
                 multiline
                 numberOfLines={3}
@@ -143,6 +193,7 @@ export default function MissionsScreen() {
                     <Pressable
                       key={item}
                       onPress={() => setCategory(item)}
+                      testID={`mission-category-${item.toLowerCase()}`}
                       style={({ pressed }) => [
                         styles.categoryChip,
                         selected && styles.categoryChipSelected,
@@ -164,6 +215,7 @@ export default function MissionsScreen() {
                     <Pressable
                       key={item}
                       onPress={() => setDifficulty(item)}
+                      testID={`mission-difficulty-${item.toLowerCase()}`}
                       style={({ pressed }) => [
                         styles.categoryChip,
                         selected && styles.categoryChipSelected,
@@ -185,6 +237,7 @@ export default function MissionsScreen() {
                     <Pressable
                       key={item}
                       onPress={() => setDuration(item)}
+                      testID={`mission-duration-${item.toLowerCase()}`}
                       style={({ pressed }) => [
                         styles.categoryChip,
                         selected && styles.categoryChipSelected,
@@ -203,6 +256,7 @@ export default function MissionsScreen() {
                 placeholder="Prazo ex: Hoje, 20:00"
                 placeholderTextColor={lifeQuestTheme.colors.muted}
                 style={styles.input}
+                testID="mission-due-input"
                 value={dueLabel}
               />
               <TextInput
@@ -211,16 +265,18 @@ export default function MissionsScreen() {
                 placeholder="LQ da missao"
                 placeholderTextColor={lifeQuestTheme.colors.muted}
                 style={styles.input}
+                testID="mission-lq-input"
                 value={lq}
               />
               <Text style={styles.systemHint}>
-                O sistema define automaticamente apenas o XP da missao com base na dificuldade e
-                no tempo estimado. O LQ continua sendo informado separadamente na criacao.
+                O XP vai para o sistema automaticamente e esta missao e salva no json-server para
+                aparecer aos funcionarios do mesmo ambiente.
               </Text>
+              <Text style={styles.storyHint}>{getMissionLore(category)}</Text>
               <Pressable
                 disabled={!canSubmitMission}
                 onPress={() => {
-                  createMission({
+                  void createMission({
                     title: title.trim(),
                     description: description.trim(),
                     category,
@@ -237,6 +293,7 @@ export default function MissionsScreen() {
                   setDifficulty('Facil');
                   setDuration('Curta');
                 }}
+                testID="mission-create-button"
                 style={({ pressed }) => [
                   styles.submitButton,
                   !canSubmitMission && styles.buttonDisabled,
@@ -246,15 +303,7 @@ export default function MissionsScreen() {
                 <Text style={styles.submitButtonText}>Criar missao</Text>
               </Pressable>
             </View>
-          ) : (
-            <View style={styles.infoCard}>
-              <Text style={styles.infoTitle}>Somente superiores criam missoes</Text>
-              <Text style={styles.infoText}>
-                Neste perfil, voce executa a tarefa, registra o que foi feito e envia a conclusao
-                para o gerente ou responsavel aprovar.
-              </Text>
-            </View>
-          )}
+          ) : null}
 
           {canCreateMissions ? (
             <View style={styles.listSection}>
@@ -270,6 +319,9 @@ export default function MissionsScreen() {
                     <Text style={styles.metaText}>
                       Sistema: {mission.difficulty} • {mission.duration}
                     </Text>
+                    <Text style={styles.metaText}>
+                      Responsavel atual: {mission.assigneeName || 'Ainda nao assumida'}
+                    </Text>
                     <Text style={styles.detailTitle}>Resumo do funcionario</Text>
                     <Text style={styles.detailText}>{mission.completionRequest?.summary}</Text>
                     <Text style={styles.detailTitle}>Motivo de atraso</Text>
@@ -278,7 +330,10 @@ export default function MissionsScreen() {
                     </Text>
                     <View style={styles.actionRow}>
                       <Pressable
-                        onPress={() => approveMissionCompletion(mission.id)}
+                        onPress={() => {
+                          void approveMissionCompletion(mission.id);
+                        }}
+                        testID={`approve-mission-${mission.id}`}
                         style={({ pressed }) => [
                           styles.primaryButton,
                           pressed && styles.buttonPressed,
@@ -286,7 +341,10 @@ export default function MissionsScreen() {
                         <Text style={styles.primaryButtonText}>Aprovar conclusao</Text>
                       </Pressable>
                       <Pressable
-                        onPress={() => reopenMission(mission.id)}
+                        onPress={() => {
+                          void reopenMission(mission.id);
+                        }}
+                        testID={`reopen-mission-${mission.id}`}
                         style={({ pressed }) => [
                           styles.secondaryButton,
                           pressed && styles.buttonPressed,
@@ -300,7 +358,7 @@ export default function MissionsScreen() {
             </View>
           ) : (
             <View style={styles.listSection}>
-              <Text style={styles.sectionTitle}>Missoes ativas</Text>
+              <Text style={styles.sectionTitle}>Missoes disponiveis</Text>
               {activeMissions.length === 0 ? (
                 <EmptyState text="Nenhuma missao ativa disponivel agora." />
               ) : (
@@ -308,6 +366,7 @@ export default function MissionsScreen() {
                   const completionNote = completionNotes[mission.id] ?? '';
                   const delayNote = delayNotes[mission.id] ?? '';
                   const issueNote = issueNotes[mission.id] ?? '';
+                  const isTakenByOther = Boolean(mission.assigneeId && mission.assigneeId !== accountId);
 
                   return (
                     <View key={mission.id} style={styles.missionCard}>
@@ -318,73 +377,107 @@ export default function MissionsScreen() {
                         Sistema: {mission.difficulty} • {mission.duration}
                       </Text>
                       <Text style={styles.metaText}>
-                        Recompensa do sistema: {mission.xp} XP • {mission.lq} LQ
+                        Responsavel: {mission.assigneeName || 'Disponivel para pegar'}
                       </Text>
-                      <TextInput
-                        onChangeText={(value) =>
-                          setCompletionNotes((current) => ({ ...current, [mission.id]: value }))
-                        }
-                        placeholder="O que foi feito para concluir a missao?"
-                        placeholderTextColor={lifeQuestTheme.colors.muted}
-                        style={[styles.input, styles.inputMultiline]}
-                        textAlignVertical="top"
-                        multiline
-                        numberOfLines={3}
-                        value={completionNote}
-                      />
-                      <TextInput
-                        onChangeText={(value) =>
-                          setDelayNotes((current) => ({ ...current, [mission.id]: value }))
-                        }
-                        placeholder="Motivo do atraso, se houve"
-                        placeholderTextColor={lifeQuestTheme.colors.muted}
-                        style={styles.input}
-                        value={delayNote}
-                      />
-                      <TextInput
-                        onChangeText={(value) =>
-                          setIssueNotes((current) => ({ ...current, [mission.id]: value }))
-                        }
-                        placeholder="Motivo da nao conclusao, se nao conseguiu finalizar"
-                        placeholderTextColor={lifeQuestTheme.colors.muted}
-                        style={styles.input}
-                        value={issueNote}
-                      />
-                      <View style={styles.actionRow}>
+                      <Text style={styles.metaText}>
+                        Recompensa: {mission.xp} XP • {mission.lq} LQ
+                      </Text>
+
+                      {!mission.assigneeId ? (
                         <Pressable
-                          disabled={completionNote.trim().length < 4}
                           onPress={() => {
-                            submitMissionForApproval({
-                              missionId: mission.id,
-                              summary: completionNote.trim(),
-                              delayReason: delayNote.trim(),
-                            });
-                            clearMissionDraft(mission.id);
+                            void claimMission(mission.id);
                           }}
+                          testID={`claim-mission-${mission.id}`}
                           style={({ pressed }) => [
                             styles.primaryButton,
-                            completionNote.trim().length < 4 && styles.buttonDisabled,
-                            pressed && completionNote.trim().length >= 4 && styles.buttonPressed,
+                            styles.singleActionButton,
+                            pressed && styles.buttonPressed,
                           ]}>
-                          <Text style={styles.primaryButtonText}>Enviar para aprovacao</Text>
+                          <Text style={styles.primaryButtonText}>Pegar missao</Text>
                         </Pressable>
-                        <Pressable
-                          disabled={issueNote.trim().length < 5}
-                          onPress={() => {
-                            reportMissionIssue({
-                              missionId: mission.id,
-                              reason: issueNote.trim(),
-                            });
-                            clearMissionDraft(mission.id);
-                          }}
-                          style={({ pressed }) => [
-                            styles.secondaryButton,
-                            issueNote.trim().length < 5 && styles.buttonDisabled,
-                            pressed && issueNote.trim().length >= 5 && styles.buttonPressed,
-                          ]}>
-                          <Text style={styles.secondaryButtonText}>Nao conclui</Text>
-                        </Pressable>
-                      </View>
+                      ) : isTakenByOther ? (
+                        <Text style={styles.helperText}>
+                          Esta missao ja foi assumida por {mission.assigneeName}.
+                        </Text>
+                      ) : (
+                        <>
+                          <TextInput
+                            onChangeText={(value) =>
+                              setCompletionNotes((current) => ({ ...current, [mission.id]: value }))
+                            }
+                            placeholder="O que foi feito para concluir a missao?"
+                            placeholderTextColor={lifeQuestTheme.colors.muted}
+                            style={[styles.input, styles.inputMultiline]}
+                            testID={`completion-note-${mission.id}`}
+                            textAlignVertical="top"
+                            multiline
+                            numberOfLines={3}
+                            value={completionNote}
+                          />
+                          <TextInput
+                            onChangeText={(value) =>
+                              setDelayNotes((current) => ({ ...current, [mission.id]: value }))
+                            }
+                            placeholder="Motivo do atraso, se houve"
+                            placeholderTextColor={lifeQuestTheme.colors.muted}
+                            style={styles.input}
+                            testID={`delay-note-${mission.id}`}
+                            value={delayNote}
+                          />
+                          <TextInput
+                            onChangeText={(value) =>
+                              setIssueNotes((current) => ({ ...current, [mission.id]: value }))
+                            }
+                            placeholder="Motivo da nao conclusao, se nao conseguiu finalizar"
+                            placeholderTextColor={lifeQuestTheme.colors.muted}
+                            style={styles.input}
+                            testID={`issue-note-${mission.id}`}
+                            value={issueNote}
+                          />
+                          <View style={styles.actionRow}>
+                            <Pressable
+                              disabled={completionNote.trim().length < 4}
+                              onPress={() => {
+                                void submitMissionForApproval({
+                                  missionId: mission.id,
+                                  summary: completionNote.trim(),
+                                  delayReason: delayNote.trim(),
+                                });
+                                clearMissionDraft(mission.id);
+                              }}
+                              testID={`submit-approval-${mission.id}`}
+                              style={({ pressed }) => [
+                                styles.primaryButton,
+                                completionNote.trim().length < 4 && styles.buttonDisabled,
+                                pressed &&
+                                  completionNote.trim().length >= 4 &&
+                                  styles.buttonPressed,
+                              ]}>
+                              <Text style={styles.primaryButtonText}>Enviar para aprovacao</Text>
+                            </Pressable>
+                            <Pressable
+                              disabled={issueNote.trim().length < 5}
+                              onPress={() => {
+                                void reportMissionIssue({
+                                  missionId: mission.id,
+                                  reason: issueNote.trim(),
+                                });
+                                clearMissionDraft(mission.id);
+                              }}
+                              testID={`report-issue-${mission.id}`}
+                              style={({ pressed }) => [
+                                styles.secondaryButton,
+                                issueNote.trim().length < 5 && styles.buttonDisabled,
+                                pressed &&
+                                  issueNote.trim().length >= 5 &&
+                                  styles.buttonPressed,
+                              ]}>
+                              <Text style={styles.secondaryButtonText}>Nao conclui</Text>
+                            </Pressable>
+                          </View>
+                        </>
+                      )}
                     </View>
                   );
                 })
@@ -406,10 +499,16 @@ export default function MissionsScreen() {
                     <Text style={styles.metaText}>
                       Sistema: {mission.difficulty} • {mission.duration}
                     </Text>
+                    <Text style={styles.metaText}>
+                      Responsavel atual: {mission.assigneeName || 'Ainda nao assumida'}
+                    </Text>
                     <Text style={styles.detailTitle}>Motivo informado</Text>
                     <Text style={styles.detailText}>{mission.issueReport?.reason}</Text>
                     <Pressable
-                      onPress={() => reopenMission(mission.id)}
+                      onPress={() => {
+                        void reopenMission(mission.id);
+                      }}
+                      testID={`reopen-issue-${mission.id}`}
                       style={({ pressed }) => [
                         styles.secondaryButton,
                         styles.singleButton,
@@ -435,6 +534,9 @@ export default function MissionsScreen() {
                     <Text style={styles.metaText}>
                       Sistema: {mission.difficulty} • {mission.duration}
                     </Text>
+                    <Text style={styles.metaText}>
+                      Responsavel atual: {mission.assigneeName || 'Ainda nao assumida'}
+                    </Text>
                     <Text style={styles.detailTitle}>Resumo enviado</Text>
                     <Text style={styles.detailText}>{mission.completionRequest?.summary}</Text>
                     <Text style={styles.helperText}>
@@ -458,13 +560,18 @@ export default function MissionsScreen() {
                     <Text style={styles.missionTitle}>{mission.title}</Text>
                     <Text style={styles.missionDescription}>{mission.description}</Text>
                     <Text style={styles.metaText}>
-                      Sistema: {mission.difficulty} • {mission.duration} • {mission.assigneeLabel}
+                      Sistema: {mission.difficulty} • {mission.duration}
+                    </Text>
+                    <Text style={styles.metaText}>
+                      Responsavel atual: {mission.assigneeName || 'Ainda nao assumida'}
                     </Text>
                     <View style={styles.missionFooter}>
                       <Text style={styles.rewardText}>
                         {mission.xp} XP • {mission.lq} LQ
                       </Text>
-                      <Text style={styles.statusBadge}>Em andamento</Text>
+                      <Text style={styles.statusBadge}>
+                        {mission.assigneeName ? 'Assumida' : 'Aguardando pegar'}
+                      </Text>
                     </View>
                   </View>
                 ))
@@ -483,6 +590,9 @@ export default function MissionsScreen() {
                     <Text style={styles.missionDescription}>{mission.description}</Text>
                     <Text style={styles.metaText}>
                       Sistema: {mission.difficulty} • {mission.duration}
+                    </Text>
+                    <Text style={styles.metaText}>
+                      Responsavel atual: {mission.assigneeName || 'Ainda nao assumida'}
                     </Text>
                     <Text style={styles.detailTitle}>Motivo enviado</Text>
                     <Text style={styles.detailText}>{mission.issueReport?.reason}</Text>
@@ -507,6 +617,9 @@ export default function MissionsScreen() {
                   <Text style={styles.missionDescription}>{mission.description}</Text>
                   <Text style={styles.metaText}>
                     Sistema: {mission.difficulty} • {mission.duration}
+                  </Text>
+                  <Text style={styles.metaText}>
+                    Responsavel atual: {mission.assigneeName || 'Ainda nao assumida'}
                   </Text>
                   <Text style={styles.detailTitle}>Entrega registrada</Text>
                   <Text style={styles.detailText}>
@@ -534,10 +647,13 @@ const styles = StyleSheet.create({
   kicker: { color: lifeQuestTheme.colors.accent, fontSize: 12, fontWeight: '800', marginBottom: 10 },
   title: { color: lifeQuestTheme.colors.text, fontSize: 32, fontWeight: '800', lineHeight: 40, marginBottom: 8 },
   subtitle: { color: lifeQuestTheme.colors.muted, fontSize: 15, lineHeight: 23, marginBottom: 20 },
+  errorText: { color: lifeQuestTheme.colors.warning, fontSize: 13, lineHeight: 20, marginBottom: 16 },
   formCard: { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: lifeQuestTheme.colors.cardBorder, borderRadius: 26, borderWidth: 1, marginBottom: 22, padding: 18 },
   infoCard: { backgroundColor: 'rgba(255,255,255,0.05)', borderColor: lifeQuestTheme.colors.cardBorder, borderRadius: 26, borderWidth: 1, marginBottom: 22, padding: 18 },
   infoTitle: { color: lifeQuestTheme.colors.text, fontSize: 18, fontWeight: '800', marginBottom: 10 },
   infoText: { color: lifeQuestTheme.colors.muted, fontSize: 15, lineHeight: 23 },
+  storyHint: { color: lifeQuestTheme.colors.text, fontSize: 13, lineHeight: 20, marginTop: 12, opacity: 0.88 },
+  infoButton: { marginTop: 14 },
   sectionTitle: { color: lifeQuestTheme.colors.text, fontSize: 19, fontWeight: '800', marginBottom: 14 },
   inlineLabel: { color: lifeQuestTheme.colors.text, fontSize: 14, fontWeight: '700', marginBottom: 10 },
   input: { backgroundColor: lifeQuestTheme.colors.card, borderRadius: 18, color: lifeQuestTheme.colors.text, fontSize: 15, marginBottom: 12, minHeight: 52, paddingHorizontal: 16, paddingVertical: 14 },
@@ -573,6 +689,7 @@ const styles = StyleSheet.create({
   actionRow: { flexDirection: 'row', gap: 10, marginTop: 4 },
   primaryButton: { alignItems: 'center', backgroundColor: lifeQuestTheme.colors.accent, borderRadius: 16, flex: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: 12 },
   secondaryButton: { alignItems: 'center', backgroundColor: lifeQuestTheme.colors.card, borderRadius: 16, flex: 1, justifyContent: 'center', minHeight: 46, paddingHorizontal: 12 },
+  singleActionButton: { marginTop: 6 },
   singleButton: { marginTop: 8 },
   primaryButtonText: { color: lifeQuestTheme.colors.text, fontSize: 13, fontWeight: '800', textAlign: 'center' },
   secondaryButtonText: { color: lifeQuestTheme.colors.text, fontSize: 13, fontWeight: '800', textAlign: 'center' },

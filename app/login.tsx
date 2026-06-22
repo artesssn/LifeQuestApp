@@ -44,7 +44,7 @@ export default function LoginScreen() {
       <SafeAreaView style={styles.container}>
         <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
           <Text style={styles.kicker}>ACESSO</Text>
-          <Text style={styles.title}>Entre com seu usuario</Text>
+          <Text style={styles.title} testID="login-title">Entre com seu usuario</Text>
           <Text style={styles.subtitle}>
             Use o nome e a senha cadastrados para voltar ao seu perfil salvo.
           </Text>
@@ -57,6 +57,7 @@ export default function LoginScreen() {
               placeholder="Seu nome cadastrado"
               placeholderTextColor={lifeQuestTheme.colors.muted}
               style={styles.input}
+              testID="login-name-input"
               value={name}
             />
 
@@ -67,6 +68,7 @@ export default function LoginScreen() {
               placeholderTextColor={lifeQuestTheme.colors.muted}
               secureTextEntry
               style={styles.input}
+              testID="login-password-input"
               value={password}
             />
 
@@ -79,6 +81,7 @@ export default function LoginScreen() {
                   router.replace('/(tabs)');
                 }
               }}
+              testID="login-submit-button"
               style={({ pressed }) => [styles.button, pressed && styles.buttonPressed]}>
               <Text style={styles.buttonText}>Entrar</Text>
             </Pressable>
@@ -86,6 +89,7 @@ export default function LoginScreen() {
 
           <Pressable
             onPress={() => router.replace({ pathname: '/', params: { novo: '1' } } as never)}
+            testID="login-create-user-button"
             style={({ pressed }) => [styles.linkButton, pressed && styles.buttonPressed]}>
             <Text style={styles.linkText}>Criar novo usuario</Text>
           </Pressable>
