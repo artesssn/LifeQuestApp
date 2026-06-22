@@ -1,12 +1,5 @@
 # Casos de Teste Playwright - LifeQuest
 
-## Como rodar
-
-```powershell
-cd "C:\Users\joaog\OneDrive\Área de Trabalho\Codigo Do App LifeQuest\LifeQuest"
-npm run test:e2e
-```
-
 ## Evidencias
 
 As evidencias em imagem sao salvas em:
